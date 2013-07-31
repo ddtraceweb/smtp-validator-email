@@ -1,0 +1,28 @@
+{
+  "name": "ddtraceweb/smtp-validator-email",
+  "description": "Validate your email by smtp protocol",
+  "keywords": [
+    "validator email",
+    "smtp validator email",
+    "checkmx",
+    "validate email",
+    "check email smtp"
+  ],
+  "homepage": "http://www.traceweb.fr",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "David DJIAN",
+      "email": "david@traceweb.fr",
+      "homepage": "http://www.traceweb.fr"
+    }
+  ],
+  "require": {
+    "php": ">=5.3.3"
+  },
+  "autoload": {
+    "psr-0": {
+      "SmtpValidatorEmail": "lib/"
+    }
+  }
+}
