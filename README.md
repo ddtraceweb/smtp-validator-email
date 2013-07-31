@@ -8,7 +8,7 @@
 * namespaces use
 * smtp configuration PHP Ok.
 
-*example :
+#example :
 
 ```
 use SmtpValidatorEmail\ValidatorEmail;
