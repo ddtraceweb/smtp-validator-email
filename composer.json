@@ -8,6 +8,7 @@
     "validate email",
     "check email smtp"
   ],
+  "type": "library",
   "homepage": "http://www.traceweb.fr",
   "license": "MIT",
   "authors": [
