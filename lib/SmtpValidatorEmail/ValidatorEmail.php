@@ -56,7 +56,7 @@ class ValidatorEmail
      * If not, the class checks for a "catch-all" and if it determines the box
      * has a "catch-all", sets all the emails on that domain as invalid.
      */
-    public $catchAllIsValid = true;
+    public $catchAllIsValid = 1;
 
     /**
      * @var array
