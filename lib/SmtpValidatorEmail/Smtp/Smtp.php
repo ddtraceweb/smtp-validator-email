@@ -312,7 +312,7 @@ class Smtp
         if (!$this->state['mail']) {
             throw new ExceptionNoMailFrom('Need MAIL FROM before RCPT TO');
         }
-        $isValid       = false;
+        $isValid       = 0;
         $expectedCodes = array(
             self::SMTP_GENERIC_SUCCESS,
             self::SMTP_USER_NOT_LOCAL
@@ -327,7 +327,7 @@ class Smtp
             try {
                 $this->expect($expectedCodes, $this->commandTimeouts['rcpt']);
                 $this->state['rcpt'] = true;
-                $isValid             = true;
+                $isValid             = 1;
             } catch (ExceptionUnexpectedResponse $e) {
                 //'Unexpected response to RCPT TO: ' . $e->getMessage();
             }
