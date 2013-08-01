@@ -38,7 +38,7 @@ class ValidatorEmail
     /**
      * @var
      */
-    protected $fromUser ='user';
+    protected $fromUser = 'user';
     /**
      * @var
      */
@@ -65,9 +65,9 @@ class ValidatorEmail
 
 
     /**
-     * @param array|string  $emails
-     * @param string $sender
-     * @param array   $options
+     * @param array|string $emails
+     * @param string       $sender
+     * @param array        $options
      *
      * possible options :
      *
@@ -77,20 +77,18 @@ class ValidatorEmail
      */
     public function __construct($emails = array(), $sender = '', $options = array())
     {
-        if(!array_key_exists('domainMoreInfo', $options))
-        {
+        if (!array_key_exists('domainMoreInfo', $options)) {
             $options['domainMoreInfo'] = false;
         }
 
-        if(!array_key_exists('delaySleep', $options))
-        {
+        if (!array_key_exists('delaySleep', $options)) {
             $options['delaySleep'] = array(0);
         }
 
         if (!empty($emails)) {
 
             $emailBag = new EmailBag();
-            $emailBag->add((array) $emails);
+            $emailBag->add((array)$emails);
             $domainBag     = $this->setEmailsDomains($emailBag);
             $this->domains = $domainBag->all();
 
@@ -139,8 +137,7 @@ class ValidatorEmail
                 $count = count($options['delaySleep']);
 
                 $i = 0;
-                while($i > $count)
-                {
+                while ($i > $count) {
                     sleep($options['delaySleep'][$i]);
 
                     // say helo, and continue if we can talk
@@ -208,8 +205,7 @@ class ValidatorEmail
 
             }
 
-            if($options['domainMoreInfo'])
-            {
+            if ($options['domainMoreInfo']) {
                 $this->results[$dom->getDomain()] = $dom->getDescription();
             }
         }
@@ -239,8 +235,7 @@ class ValidatorEmail
     {
         $domainBag = new DomainBag();
 
-        foreach($emailBag as $key => $emails)
-        {
+        foreach ($emailBag as $key => $emails) {
             foreach ($emails as $email) {
 
                 $mail = new Email($email);

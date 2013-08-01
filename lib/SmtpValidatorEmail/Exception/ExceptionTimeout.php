@@ -9,6 +9,7 @@
 
 namespace SmtpValidatorEmail\Exception;
 
-class ExceptionTimeout extends ExceptionSmtpValidatorEmail {
+class ExceptionTimeout extends ExceptionSmtpValidatorEmail
+{
 
 }

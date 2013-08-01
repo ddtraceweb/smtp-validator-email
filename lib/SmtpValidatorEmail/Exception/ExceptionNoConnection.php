@@ -9,6 +9,7 @@
 
 namespace SmtpValidatorEmail\Exception;
 
-class ExceptionNoConnection extends ExceptionSmtpValidatorEmail {
+class ExceptionNoConnection extends ExceptionSmtpValidatorEmail
+{
 
 }

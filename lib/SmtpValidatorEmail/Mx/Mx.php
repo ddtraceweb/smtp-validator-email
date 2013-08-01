@@ -12,6 +12,7 @@ namespace SmtpValidatorEmail\Mx;
 class Mx
 {
     public $mxs = array();
+
     /**
      * Queries the DNS server for domain MX entries
      *
