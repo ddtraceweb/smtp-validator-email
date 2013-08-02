@@ -13,7 +13,7 @@
 * example with 1 email :
 
 
-```
+```php
 <?php
 
 use SmtpValidatorEmail\ValidatorEmail;
@@ -29,7 +29,7 @@ var_dump($validator->getResults());
 
 * example with X emails :
 
-```
+```php
 <?php
 
 use SmtpValidatorEmail\ValidatorEmail;
@@ -45,7 +45,7 @@ var_dump($validator->getResults());
 
 * example with X emails and have custom delays time when connection and send HELO, with domain need time to respond.
 
-```
+```php
 <?php
 
 use SmtpValidatorEmail\ValidatorEmail;
@@ -64,7 +64,7 @@ var_dump($validator->getResults());
 
 * example with X emails with more informations on domain, mxs and priorities.
 
-```
+```php
 <?php
 
 use SmtpValidatorEmail\ValidatorEmail;
@@ -83,7 +83,7 @@ var_dump($validator->getResults());
 
 * example with X emails with more informations on domain, mxs and priorities. In example same domain for two email. This is a connection to domain and check all account emails.
 
-```
+```php
 <?php
 
 use SmtpValidatorEmail\ValidatorEmail;
