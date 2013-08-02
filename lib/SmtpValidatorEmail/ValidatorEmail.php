@@ -66,8 +66,8 @@ class ValidatorEmail
 
     /**
      * @param array|string $emails
-     * @param string       $sender
-     * @param array        $options
+     * @param string $sender
+     * @param array $options
      *
      * possible options :
      *
@@ -89,7 +89,7 @@ class ValidatorEmail
 
             $emailBag = new EmailBag();
             $emailBag->add((array)$emails);
-            $domainBag     = $this->setEmailsDomains($emailBag);
+            $domainBag = $this->setEmailsDomains($emailBag);
             $this->domains = $domainBag->all();
 
         }
@@ -104,40 +104,42 @@ class ValidatorEmail
 
         foreach ($this->domains as $domain => $users) {
 
-            $mx  = new Mx();
+            $mx = new Mx();
             $mxs = $mx->getEntries($domain);
 
             $dom = new Domain($domain);
             $dom->addDescription(array('users' => $users));
             $dom->addDescription(array('mxs' => $mxs));
 
-            $smtp = new Smtp(array('fromDomain' => $this->fromDomain, 'fromUser' => $this->fromUser));
+            $count = count($options['delaySleep']);
+            $i = 0;
+            $loopStop = 0;
+            while ($i < $count && $loopStop != 1) {
 
-            // try each host
-            while (list($host) = each($mxs)) {
+                $smtp = new Smtp(array('fromDomain' => $this->fromDomain, 'fromUser' => $this->fromUser));
 
-                // try connecting to the remote host
-                try {
+                // try each host
+                while (list($host) = each($mxs)) {
 
-                    $smtp->connect($host);
+                    // try connecting to the remote host
+                    try {
 
-                    if ($smtp->isConnect()) {
-                        break;
+                        $smtp->connect($host);
+
+                        if ($smtp->isConnect()) {
+                            break;
+                        }
+
+                    } catch (ExceptionNoConnection $e) {
+                        // unable to connect to host, so these addresses are invalid?
+                        $this->setDomainResults($users, $dom, 0);
                     }
-
-                } catch (ExceptionNoConnection $e) {
-                    // unable to connect to host, so these addresses are invalid?
-                    $this->setDomainResults($users, $dom, 0);
                 }
-            }
 
-            // are we connected?
-            if ($smtp->isConnect()) {
+                // are we connected?
+                if ($smtp->isConnect()) {
 
-                $count = count($options['delaySleep']);
 
-                $i = 0;
-                while ($i > $count) {
                     sleep($options['delaySleep'][$i]);
 
                     // say helo, and continue if we can talk
@@ -178,8 +180,13 @@ class ValidatorEmail
                                 $smtp->noop();
                                 // rcpt to for each user
                                 foreach ($users as $user) {
-                                    $address                 = $user . '@' . $dom->getDomain();
+                                    $address = $user . '@' . $dom->getDomain();
                                     $this->results[$address] = $smtp->rcpt($address);
+
+                                    if($this->results[$address] == 1)
+                                    {
+                                        $loopStop = 1;
+                                    }
                                     $smtp->noop();
                                 }
                             }
@@ -200,13 +207,14 @@ class ValidatorEmail
                         $this->setDomainResults($users, $dom, $this->noCommIsValid);
 
                     }
-                    $i++;
+
                 }
 
-            }
+                if ($options['domainMoreInfo']) {
+                    $this->results[$dom->getDomain()] = $dom->getDescription();
+                }
 
-            if ($options['domainMoreInfo']) {
-                $this->results[$dom->getDomain()] = $dom->getDescription();
+                $i++;
             }
         }
 
@@ -259,19 +267,19 @@ class ValidatorEmail
      */
     public function setSender($email)
     {
-        $mail  = new Email($email);
+        $mail = new Email($email);
         $parts = $mail->parse();
 
-        $this->fromUser   = $parts[0];
+        $this->fromUser = $parts[0];
         $this->fromDomain = $parts[1];
     }
 
     /**
      * Helper to set results for all the users on a domain to a specific value
      *
-     * @param array  $users    Array of users (usernames)
+     * @param array $users    Array of users (usernames)
      * @param Domain $domain   The domain
-     * @param int    $val      Value to set
+     * @param int $val      Value to set
      */
     private function setDomainResults($users, Domain $domain, $val)
     {
