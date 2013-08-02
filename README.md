@@ -72,7 +72,7 @@ use SmtpValidatorEmail\ValidatorEmail;
 $from = 'xyz@xzzz.com'; // for SMTP FROM:<> command
 $emails = array('toto@somewhererlse.com', 'titi@totitito.com');
 
-//two loops in this example for difficult domains.
+//more informations option activate
 $options = array('domainMoreInfo' => true);
 
 $validator = new ValidatorEmail($email, $from);
@@ -91,7 +91,7 @@ use SmtpValidatorEmail\ValidatorEmail;
 $from = 'xyz@xzzz.com'; // for SMTP FROM:<> command
 $emails = array('toto@somewhererlse.com', 'titi@somewhererlse.com');
 
-//two loops in this example for difficult domains.
+//more informations option activate
 $options = array('domainMoreInfo' => true);
 
 $validator = new ValidatorEmail($email, $from);
