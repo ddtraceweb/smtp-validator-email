@@ -99,3 +99,7 @@ $validator = new ValidatorEmail($email, $from);
 var_dump($validator->getResults());
 ?>
 ```
+
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/ddtraceweb/smtp-validator-email/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+
