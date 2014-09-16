@@ -24,14 +24,6 @@ use SmtpValidatorEmail\Smtp\Smtp;
 class ValidatorEmail
 {
     /**
-     * @var
-     */
-    protected $email;
-    /**
-     * @var
-     */
-    protected $sender;
-    /**
      * @var array
      */
     protected $domains;
@@ -43,20 +35,6 @@ class ValidatorEmail
      * @var
      */
     protected $fromDomain = 'localhost';
-
-    /**
-     * Being unable to communicate with the remote MTA could mean an address
-     * is invalid, but it might not, depending on your use case, set the
-     * value appropriately.
-     */
-    public $noCommIsValid = 0;
-
-    /**
-     * Are 'catch-all' accounts considered valid or not?
-     * If not, the class checks for a "catch-all" and if it determines the box
-     * has a "catch-all", sets all the emails on that domain as invalid.
-     */
-    public $catchAllIsValid = 1;
 
     /**
      * @var array
@@ -83,6 +61,24 @@ class ValidatorEmail
 
         if (!array_key_exists('delaySleep', $options)) {
             $options['delaySleep'] = array(0);
+        }
+
+        /**
+         * Being unable to communicate with the remote MTA could mean an address
+         * is invalid, but it might not, depending on your use case, set the
+         * value appropriately.
+         */
+        if (!array_key_exists('noCommIsValid', $options)) {
+            $options['noCommIsValid'] = 0;
+        }
+
+        /**
+         * Are 'catch-all' accounts considered valid or not?
+         * If not, the class checks for a "catch-all" and if it determines the box
+         * has a "catch-all", sets all the emails on that domain as invalid.
+         */
+        if (array_key_exists('catchAllIsValid', $options)) {
+            $options['catchAllIsValid'] = 1;
         }
 
         if (!empty($emails)) {
@@ -117,6 +113,9 @@ class ValidatorEmail
             while ($i < $count && $loopStop != 1) {
 
                 $smtp = new Smtp(array('fromDomain' => $this->fromDomain, 'fromUser' => $this->fromUser));
+                if (array_key_exists('timeout', $options)) {
+                    $smtp->timeout = $options['timeout'];
+                }
 
                 // try each host
                 while (list($host) = each($mxs)) {
@@ -148,7 +147,7 @@ class ValidatorEmail
                         // try issuing MAIL FROM
                         if (!($smtp->mail($this->fromUser . '@' . $this->fromDomain))) {
                             // MAIL FROM not accepted, we can't talk
-                            $this->setDomainResults($users, $dom, $this->noCommIsValid);
+                            $this->setDomainResults($users, $dom, $options['noCommIsValid']);
                         }
 
                         /**
@@ -169,8 +168,8 @@ class ValidatorEmail
                             // accounts on such domains as invalid, mark all the
                             // users as invalid and move on
                             if ($isCatchallDomain) {
-                                if (!($this->catchAllIsValid)) {
-                                    $this->setDomainResults($users, $dom, $this->catchAllIsValid);
+                                if (!$options['catchAllIsValid']) {
+                                    $this->setDomainResults($users, $dom, $options['catchAllIsValid']);
                                     continue;
                                 }
                             }
@@ -204,7 +203,7 @@ class ValidatorEmail
                     } else {
 
                         // we didn't get a good response to helo and should be disconnected already
-                        $this->setDomainResults($users, $dom, $this->noCommIsValid);
+                        $this->setDomainResults($users, $dom, $options['noCommIsValid']);
 
                     }
 
