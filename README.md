@@ -103,6 +103,16 @@ var_dump($validator->getResults());
 ?>
 ```
 
+* Avaialable default options
+
+```php
+array(
+  'domainMoreInfo' => false,
+  'delaySleep' => array(0),
+  'noCommIsValid' => 0,
+  'catchAllIsValid' => 1
+);
+```
 
 [![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/ddtraceweb/smtp-validator-email/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
 
