@@ -318,7 +318,7 @@ class Smtp
             self::SMTP_USER_NOT_LOCAL
         );
         if ($this->greyListedConsideredValid) {
-            $expectedCodes += $this->greyListed;
+            $expectedCodes = array_merge($expectedCodes, $this->greyListed);
         }
         // issue RCPT TO, 5 minute timeout
         try {
