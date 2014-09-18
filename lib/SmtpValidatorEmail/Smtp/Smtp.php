@@ -60,14 +60,14 @@ class Smtp
      * @see expect()
      */
     protected $commandTimeouts = array(
-        'ehlo' => 300,
-        'helo' => 300,
+        'ehlo' => 120,
+        'helo' => 120,
         'tls'  => 180, // start tls
         'mail' => 300, // mail from
         'rcpt' => 300, // rcpt to,
-        'rset' => 3,
-        'quit' => 300,
-        'noop' => 300
+        'rset' => 30,
+        'quit' => 60,
+        'noop' => 60
     );
 
     /**
