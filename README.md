@@ -56,7 +56,8 @@ $emails = array('toto@somewhererlse.com', 'titi@totitito.com');
 //two loops in this example for difficult domains.
 $options = array('delaySleep' => array(0, 6));
 
-$validator = new ValidatorEmail($email, $from);
+//Handle $options to the constructor as third parameter
+$validator = new ValidatorEmail($email, $from, $options);
 
 var_dump($validator->getResults());
 ?>
@@ -75,7 +76,8 @@ $emails = array('toto@somewhererlse.com', 'titi@totitito.com');
 //more informations option activate
 $options = array('domainMoreInfo' => true);
 
-$validator = new ValidatorEmail($email, $from);
+//Handle $options to the constructor as third parameter
+$validator = new ValidatorEmail($email, $from, $options);
 
 var_dump($validator->getResults());
 ?>
@@ -94,12 +96,23 @@ $emails = array('toto@somewhererlse.com', 'titi@somewhererlse.com');
 //more informations option activate
 $options = array('domainMoreInfo' => true);
 
-$validator = new ValidatorEmail($email, $from);
+//Handle $options to the constructor as third parameter
+$validator = new ValidatorEmail($email, $from, $options);
 
 var_dump($validator->getResults());
 ?>
 ```
 
+* Avaialable default options
+
+```php
+array(
+  'domainMoreInfo' => false,
+  'delaySleep' => array(0),
+  'noCommIsValid' => 0,
+  'catchAllIsValid' => 1
+);
+```
 
 [![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/ddtraceweb/smtp-validator-email/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
 
