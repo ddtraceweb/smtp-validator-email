@@ -8,6 +8,12 @@
 * namespaces use
 * smtp configuration PHP Ok.
 
+#Installation
+For installation you can use composer.
+
+Simple add `"ddtraceweb/smtp-validator-email": "dev-master"` 
+in your composer.json to install the latest version
+
 #examples :
 
 * example with 1 email :
