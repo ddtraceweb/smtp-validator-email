@@ -77,7 +77,7 @@ class ValidatorEmail
          * If not, the class checks for a "catch-all" and if it determines the box
          * has a "catch-all", sets all the emails on that domain as invalid.
          */
-        if (array_key_exists('catchAllIsValid', $options)) {
+        if (!array_key_exists('catchAllIsValid', $options)) {
             $options['catchAllIsValid'] = 1;
         }
 
