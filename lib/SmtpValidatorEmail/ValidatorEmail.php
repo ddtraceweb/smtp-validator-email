@@ -17,6 +17,7 @@ use SmtpValidatorEmail\Exception\ExceptionNoConnection;
 use SmtpValidatorEmail\Mx\Mx;
 use SmtpValidatorEmail\Smtp\Smtp;
 
+
 /**
  * Class ValidatorEmail
  * @package SmtpValidatorEmail
@@ -134,79 +135,83 @@ class ValidatorEmail
                         $this->setDomainResults($users, $dom, 0);
                     }
                 }
+                try {
+                    // are we connected?
+                    if ($smtp->isConnect()) {
 
-                // are we connected?
-                if ($smtp->isConnect()) {
+
+                        sleep($options['delaySleep'][$i]);
+
+                        // say helo, and continue if we can talk
+                        if ($smtp->helo()) {
+
+                            // try issuing MAIL FROM
+                            if (!($smtp->mail($this->fromUser . '@' . $this->fromDomain))) {
+                                // MAIL FROM not accepted, we can't talk
+                                $this->setDomainResults($users, $dom, $options['noCommIsValid']);
+                            }
+
+                            /**
+                             * if we're still connected, proceed (cause we might get
+                             * disconnected, or banned, or greylisted temporarily etc.)
+                             * see mail() for more
+                             */
+                            if ($smtp->isConnect()) {
+
+                                $smtp->noop();
+
+                                // Do a catch-all test for the domain always.
+                                // This increases checking time for a domain slightly,
+                                // but doesn't confuse users.
+                                try{
+                                    $isCatchallDomain = $smtp->acceptsAnyRecipient($dom);
+                                }catch (\Exception $e) {
+                                    $this->setDomainResults($users, $dom, $options['catchAllIsValid']);
+                                }
 
 
-                    sleep($options['delaySleep'][$i]);
+                                // if a catchall domain is detected, and we consider
+                                // accounts on such domains as invalid, mark all the
+                                // users as invalid and move on
+                                if ($isCatchallDomain) {
+                                    if (!$options['catchAllIsValid']) {
+                                        $this->setDomainResults($users, $dom, $options['catchAllIsValid']);
+                                        continue;
+                                    }
+                                }
 
-                    // say helo, and continue if we can talk
-                    if ($smtp->helo()) {
+                                // if we're still connected, try issuing rcpts
+                                if ($smtp->isConnect()) {
+                                    $smtp->noop();
+                                    // rcpt to for each user
+                                    foreach ($users as $user) {
+                                        $address = $user . '@' . $dom->getDomain();
+                                        $this->results[$address] = $smtp->rcpt($address);
 
-                        // try issuing MAIL FROM
-                        if (!($smtp->mail($this->fromUser . '@' . $this->fromDomain))) {
-                            // MAIL FROM not accepted, we can't talk
+                                        if ($this->results[$address] == 1) {
+                                            $loopStop = 1;
+                                        }
+                                        $smtp->noop();
+                                    }
+                                }
+
+                                // saying buh-bye if we're still connected, cause we're done here
+                                if ($smtp->isConnect()) {
+                                    // issue a rset for all the things we just made the MTA do
+                                    $smtp->rset();
+                                    // kiss it goodbye
+                                    $smtp->disconnect();
+                                }
+
+                            }
+
+                        } else {
+                            // we didn't get a good response to helo and should be disconnected already
                             $this->setDomainResults($users, $dom, $options['noCommIsValid']);
                         }
-
-                        /**
-                         * if we're still connected, proceed (cause we might get
-                         * disconnected, or banned, or greylisted temporarily etc.)
-                         * see mail() for more
-                         */
-                        if ($smtp->isConnect()) {
-
-                            $smtp->noop();
-
-                            // Do a catch-all test for the domain always.
-                            // This increases checking time for a domain slightly,
-                            // but doesn't confuse users.
-                            $isCatchallDomain = $smtp->acceptsAnyRecipient($dom);
-
-                            // if a catchall domain is detected, and we consider
-                            // accounts on such domains as invalid, mark all the
-                            // users as invalid and move on
-                            if ($isCatchallDomain) {
-                                if (!$options['catchAllIsValid']) {
-                                    $this->setDomainResults($users, $dom, $options['catchAllIsValid']);
-                                    continue;
-                                }
-                            }
-
-                            // if we're still connected, try issuing rcpts
-                            if ($smtp->isConnect()) {
-                                $smtp->noop();
-                                // rcpt to for each user
-                                foreach ($users as $user) {
-                                    $address = $user . '@' . $dom->getDomain();
-                                    $this->results[$address] = $smtp->rcpt($address);
-
-                                    if($this->results[$address] == 1)
-                                    {
-                                        $loopStop = 1;
-                                    }
-                                    $smtp->noop();
-                                }
-                            }
-
-                            // saying buh-bye if we're still connected, cause we're done here
-                            if ($smtp->isConnect()) {
-                                // issue a rset for all the things we just made the MTA do
-                                $smtp->rset();
-                                // kiss it goodbye
-                                $smtp->disconnect();
-                            }
-
-                        }
-
-                    } else {
-
-                        // we didn't get a good response to helo and should be disconnected already
-                        $this->setDomainResults($users, $dom, $options['noCommIsValid']);
-
                     }
-
+                } catch (\Exception $e) {
+                    $this->setDomainResults($users, $dom, 0);
                 }
 
                 if ($options['domainMoreInfo']) {
