@@ -286,7 +286,6 @@ class ValidatorEmail
      */
     private function setDomainResults($users, Domain $domain, $val, $info='')
     {
-        echo 'setDomain Called';
         if (!is_array($users)) {
             $users = (array)$users;
         }
