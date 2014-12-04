@@ -121,4 +121,5 @@ array(
 ```
 
 [![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/ddtraceweb/smtp-validator-email/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+[![Build Status](https://travis-ci.org/rubenCodeforges/smtp-validator-email.svg)](https://travis-ci.org/rubenCodeforges/smtp-validator-email)
 
