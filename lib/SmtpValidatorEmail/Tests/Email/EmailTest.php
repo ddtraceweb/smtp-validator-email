@@ -27,11 +27,13 @@ class EmailTest extends \PHPUnit_Framework_TestCase {
 
     public function  testParseReturnNotEmptyUser(){
         $model = new Email('some@email.com');
-        $this->assertNotEmpty($model->parse()[0]);
+        $results = $model->parse();
+        $this->assertNotEmpty($results[0]);
     }
 
     public function  testParseReturnNotEmptyDomain(){
         $model = new Email('some@email.com');
-        $this->assertNotEmpty($model->parse()[1]);
+        $results = $model->parse();
+        $this->assertNotEmpty($results[1]);
     }
 }
