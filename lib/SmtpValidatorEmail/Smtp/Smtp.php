@@ -402,7 +402,7 @@ class Smtp
         // did the send work?
         if ($result === false) {
             throw new ExceptionSendFailed('Send failed ' .
-            'on: ' . $this->host);
+            'on: ' . $this->host );
         }
 
         return $result;
