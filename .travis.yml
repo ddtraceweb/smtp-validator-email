@@ -13,4 +13,5 @@ script: ./vendor/bin/phpunit -c lib/ --coverage-text
 
 notifications:
   email:
-    - ruben@codeforge.com
+    - ruben@codeforges.com
+    - david.djian@traceweb.fr
