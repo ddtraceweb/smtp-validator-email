@@ -11,7 +11,6 @@
             <directory>./</directory>
             <exclude>
                 <directory>../vendor/</directory>
-                <directory>./SmtpValidatorEmail/Tests</directory>
             </exclude>
         </whitelist>
     </filter>

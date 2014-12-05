@@ -1,4 +1,5 @@
 #Smtp Validator Emails
+[![Build Status](https://travis-ci.org/rubenCodeforges/smtp-validator-email.svg)](https://travis-ci.org/rubenCodeforges/smtp-validator-email)
 
 * Smtp Validator mail can validate your email to send smtp mail and check your mx.
 
