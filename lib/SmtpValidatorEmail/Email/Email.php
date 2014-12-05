@@ -22,10 +22,18 @@ class Email
     protected $email;
 
     /**
-     * @param $email
+     * @param $email String
      */
     public function __construct($email)
     {
+        if(!is_string($email)){
+            throw new \InvalidArgumentException('constructor expected string, got: '.gettype($email));
+        }
+
+        if(!filter_var($email,FILTER_VALIDATE_EMAIL)){
+            throw new \InvalidArgumentException('String should be an email, got: '.$email);
+        }
+
         $this->setEmail($email);
     }
 
