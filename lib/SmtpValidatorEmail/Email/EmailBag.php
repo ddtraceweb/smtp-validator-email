@@ -122,6 +122,9 @@ class EmailBag implements \IteratorAggregate, \Countable
      */
     public function get($key, $default = null, $first = true)
     {
+        if(!is_string($key) && !is_int($key)){
+            throw new \InvalidArgumentException('$key expected to be string or integer, got: '.gettype($key));
+        }
 
         if (!array_key_exists($key, $this->emails)) {
             if (null === $default) {
@@ -141,13 +144,21 @@ class EmailBag implements \IteratorAggregate, \Countable
     /**
      * Sets a email values.
      *
-     * @param string       $key     The key
+     * @param string|int   $key     The key
      * @param string|array $values  The value or an array of values
      * @param Boolean      $replace Whether to replace the actual value or not (true by default)
      *
      */
     public function set($key, $values, $replace = true)
     {
+        if(!is_string($key) && !is_int($key)){
+            throw new \InvalidArgumentException('$key expected to be string, got:'.gettype($key));
+        }
+
+        if( !is_string($values) && !is_array($values) ){
+            throw new \InvalidArgumentException('$key expected to be string or array, got: '.gettype($key));
+        }
+
         $values = array_values((array)$values);
 
         if (true === $replace || !isset($this->emails[$key])) {
@@ -208,7 +219,7 @@ class EmailBag implements \IteratorAggregate, \Countable
     /**
      * Returns the number of emails.
      *
-     * @return int The number of emails
+     * @return object The ArrayIterator object of emails
      */
     public function getIterator()
     {
