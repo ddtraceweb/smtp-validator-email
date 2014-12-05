@@ -16,13 +16,13 @@ class EmailBagTest extends \PHPUnit_Framework_TestCase
 
     public function testToStringReturnsString()
     {
-        $emails = [
+        $emails = array (
             'some@mail.com',
             'some1@mail.com',
             'some2@mail.com',
             'some3@mail.com',
             'some4@mail.com'
-        ];
+        );
 
         $bag = new EmailBag($emails);
         $this->assertTrue(is_string($bag->__toString()));
@@ -37,13 +37,13 @@ class EmailBagTest extends \PHPUnit_Framework_TestCase
 
     public function testGetReturnsProperValue()
     {
-        $emails = [
+        $emails = array (
             'some@mail.com',
             'some1@mail.com',
             'some2@mail.com',
             'some3@mail.com',
             'some4@mail.com'
-        ];
+        );
 
         $bag = new EmailBag($emails);
         $this->assertEquals('some3@mail.com', $bag->get(3));
@@ -60,10 +60,10 @@ class EmailBagTest extends \PHPUnit_Framework_TestCase
 
     public function testGetWorksWithAssocArray()
     {
-        $emails = [
+        $emails = array (
             'codeforges' => 'ruben@codeforges.com',
             'traceweb' => 'david.djian@traceweb.fr'
-        ];
+        );
 
         $bag = new EmailBag($emails);
         $bag->get('codeforges');
@@ -81,33 +81,33 @@ class EmailBagTest extends \PHPUnit_Framework_TestCase
 
     public function testSetAcceptsAssocArray()
     {
-        $emails = [
+        $emails = array (
             'codeforges' => 'ruben@codeforges.com',
             'traceweb' => 'david.djian@traceweb.fr'
-        ];
+        );
 
         new EmailBag($emails);
     }
 
     public function testHasReturnProperValue()
     {
-        $emails = [
+        $emails = array (
             'some@mail.com',
             'some1@mail.com',
             'some2@mail.com',
             'some3@mail.com',
             'some4@mail.com'
-        ];
+        );
         $bag = new EmailBag($emails);
         $this->assertTrue($bag->has(1));
     }
 
     public function testHasWorksWithAssocArray()
     {
-        $emails = [
+        $emails = array (
             'codeforges' => 'ruben@codeforges.com',
             'traceweb' => 'david.djian@traceweb.fr'
-        ];
+        );
 
         $bag = new EmailBag($emails);
         $this->assertTrue($bag->has('codeforges'));
@@ -115,10 +115,10 @@ class EmailBagTest extends \PHPUnit_Framework_TestCase
 
     public function testContainsReturnsPropperValue()
     {
-        $emails = [
+        $emails = array (
             'codeforges' => 'ruben@codeforges.com',
             'traceweb' => 'david.djian@traceweb.fr'
-        ];
+        );
 
         $bag = new EmailBag($emails);
         $this->assertTrue($bag->contains('codeforges', 'ruben@codeforges.com'));
@@ -126,10 +126,10 @@ class EmailBagTest extends \PHPUnit_Framework_TestCase
 
     public function testRemove()
     {
-        $emails = [
+        $emails = array (
             'codeforges' => 'ruben@codeforges.com',
             'traceweb' => 'david.djian@traceweb.fr'
-        ];
+        );
 
         $bag = new EmailBag($emails);
         $beforeRemoveEmails = $bag->all();
@@ -139,15 +139,15 @@ class EmailBagTest extends \PHPUnit_Framework_TestCase
 
     public function testReplace()
     {
-        $emails = [
+        $emails = array (
             'codeforges' => 'ruben@codeforges.com',
             'traceweb' => 'david.djian@traceweb.fr'
-        ];
+        );
 
-        $replaceEmails = [
+        $replaceEmails = array (
             'traceweb' => 'david.djian@traceweb.fr',
             'codeforges' => 'ruben@codeforges.com'
-        ];
+        );
 
         $bag = new EmailBag($emails);
         $oldEmails = $bag->all();
@@ -158,10 +158,10 @@ class EmailBagTest extends \PHPUnit_Framework_TestCase
     }
 
     public function testGetIteratorIsObject(){
-        $emails = [
+        $emails = array (
             'codeforges' => 'ruben@codeforges.com',
             'traceweb' => 'david.djian@traceweb.fr'
-        ];
+        );
         $bag = new EmailBag($emails);
 
         $this->assertTrue( is_object($bag->getIterator()) );
