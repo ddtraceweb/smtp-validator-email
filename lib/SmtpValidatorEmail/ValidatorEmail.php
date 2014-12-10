@@ -52,38 +52,23 @@ class ValidatorEmail
      *
      *      'domainMoreInfo' (bool) for have more information on domains of users.
      *      'delaySleep' is an array of delay(s) possible after connected Server to send the request SMTP.
-     *
+     *      'catchAllIsValid' (int) can be 0 for false or 1 for true . Are 'catch-all' accounts considered valid or not?
+     *      'noCommIsValid' Being unable to communicate with the remote MTA could mean an address
+     *                      is invalid, but it might not, depending on your use case, set the
+     *                      value appropriately.
      */
     public function __construct($emails = array(), $sender = '', $options = array())
     {
-        if (!array_key_exists('domainMoreInfo', $options)) {
-            $options['domainMoreInfo'] = false;
-        }
+        $defaultOptions = array(
+            'domainMoreInfo' => false,
+            'delaySleep' => array(0),
+            'noCommIsValid' => 0,
+            'catchAllIsValid' => 1,
+        );
 
-        if (!array_key_exists('delaySleep', $options)) {
-            $options['delaySleep'] = array(0);
-        }
-
-        /**
-         * Being unable to communicate with the remote MTA could mean an address
-         * is invalid, but it might not, depending on your use case, set the
-         * value appropriately.
-         */
-        if (!array_key_exists('noCommIsValid', $options)) {
-            $options['noCommIsValid'] = 0;
-        }
-
-        /**
-         * Are 'catch-all' accounts considered valid or not?
-         * If not, the class checks for a "catch-all" and if it determines the box
-         * has a "catch-all", sets all the emails on that domain as invalid.
-         */
-        if (!array_key_exists('catchAllIsValid', $options)) {
-            $options['catchAllIsValid'] = 1;
-        }
+        $options = array_merge($defaultOptions,$options);
 
         if (!empty($emails)) {
-
             $emailBag = new EmailBag();
             $emailBag->add((array)$emails);
             $domainBag = $this->setEmailsDomains($emailBag);
