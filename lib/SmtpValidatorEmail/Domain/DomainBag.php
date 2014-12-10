@@ -12,5 +12,4 @@ use SmtpValidatorEmail\Helper\BagHelper;
  */
 class DomainBag extends BagHelper
 {
-
 }

@@ -20,5 +20,4 @@ use SmtpValidatorEmail\Helper\BagHelper;
  */
 class EmailBag extends BagHelper
 {
-
 }

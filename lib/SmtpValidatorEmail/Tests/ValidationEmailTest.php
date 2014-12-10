@@ -22,6 +22,5 @@ class ValidationEmailTest extends \PHPUnit_Framework_TestCase{
         $results  = $validator->getResults();
         $this->assertTrue(is_array($results));
 
-        var_dump($results);
     }
 }
