@@ -110,7 +110,7 @@ var_dump($validator->getResults());
 ?>
 ```
 
-* Avaialable default options
+* Available default options
 
 ```php
 array(
