@@ -10,10 +10,9 @@
 namespace SmtpValidatorEmail;
 
 use SmtpValidatorEmail\Domain\Domain;
-use SmtpValidatorEmail\Domain\DomainBag;
 use SmtpValidatorEmail\Email\Email;
-use SmtpValidatorEmail\Email\EmailBag;
 use SmtpValidatorEmail\Exception\ExceptionNoConnection;
+use SmtpValidatorEmail\Helper\BagHelper;
 use SmtpValidatorEmail\Mx\Mx;
 use SmtpValidatorEmail\Smtp\Smtp;
 
@@ -69,7 +68,7 @@ class ValidatorEmail
         $options = array_merge($defaultOptions,$options);
 
         if (!empty($emails)) {
-            $emailBag = new EmailBag();
+            $emailBag = new BagHelper();
             $emailBag->add((array)$emails);
             $domainBag = $this->setEmailsDomains($emailBag);
             $this->domains = $domainBag->all();
@@ -222,13 +221,13 @@ class ValidatorEmail
      *
      * Sets the email addresses that should be validated.
      *
-     * @param EmailBag $emailBag
+     * @param BagHelper $emailBag
      *
-     * @return DomainBag $domainBag
+     * @return BagHelper $domainBag
      */
-    public function setEmailsDomains(EmailBag $emailBag)
+    public function setEmailsDomains(BagHelper $emailBag)
     {
-        $domainBag = new DomainBag();
+        $domainBag = new BagHelper();
 
         foreach ($emailBag as $key => $emails) {
             foreach ($emails as $email) {
