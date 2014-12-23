@@ -10,10 +10,9 @@
 namespace SmtpValidatorEmail;
 
 use SmtpValidatorEmail\Domain\Domain;
-use SmtpValidatorEmail\Domain\DomainBag;
 use SmtpValidatorEmail\Email\Email;
-use SmtpValidatorEmail\Email\EmailBag;
 use SmtpValidatorEmail\Exception\ExceptionNoConnection;
+use SmtpValidatorEmail\Helper\BagHelper;
 use SmtpValidatorEmail\Mx\Mx;
 use SmtpValidatorEmail\Smtp\Smtp;
 
@@ -52,52 +51,126 @@ class ValidatorEmail
      *
      *      'domainMoreInfo' (bool) for have more information on domains of users.
      *      'delaySleep' is an array of delay(s) possible after connected Server to send the request SMTP.
-     *
+     *      'catchAllIsValid' (int) can be 0 for false or 1 for true . Are 'catch-all' accounts considered valid or not?
+     *      'noCommIsValid' Being unable to communicate with the remote MTA could mean an address
+     *                      is invalid, but it might not, depending on your use case, set the
+     *                      value appropriately.
      */
-    public function __construct($emails = array(), $sender = '', $options = array())
+    public function __construct($emails = array(), $sender, $options = array())
     {
-        if (!array_key_exists('domainMoreInfo', $options)) {
-            $options['domainMoreInfo'] = false;
-        }
+        $defaultOptions = array(
+            'domainMoreInfo' => false,
+            'delaySleep' => array(0),
+            'noCommIsValid' => 0,
+            'catchAllIsValid' => 1,
+        );
 
-        if (!array_key_exists('delaySleep', $options)) {
-            $options['delaySleep'] = array(0);
-        }
-
-        /**
-         * Being unable to communicate with the remote MTA could mean an address
-         * is invalid, but it might not, depending on your use case, set the
-         * value appropriately.
-         */
-        if (!array_key_exists('noCommIsValid', $options)) {
-            $options['noCommIsValid'] = 0;
-        }
-
-        /**
-         * Are 'catch-all' accounts considered valid or not?
-         * If not, the class checks for a "catch-all" and if it determines the box
-         * has a "catch-all", sets all the emails on that domain as invalid.
-         */
-        if (!array_key_exists('catchAllIsValid', $options)) {
-            $options['catchAllIsValid'] = 1;
-        }
-
-        if (!empty($emails)) {
-
-            $emailBag = new EmailBag();
-            $emailBag->add((array)$emails);
-            $domainBag = $this->setEmailsDomains($emailBag);
-            $this->domains = $domainBag->all();
-        }
-
-        if (!empty($sender)) {
-            $this->setSender($sender);
-        }
+        $options = array_merge($defaultOptions,$options);
+        $this->setSender($sender);
+        $this->setBags($emails);
 
         if (!is_array($this->domains) || empty($this->domains)) {
             return $this->results;
         }
 
+        $this->runValidation($options);
+
+        return $this->getResults();
+
+    }
+
+    /**
+     * @param array|string $emails
+     */
+    public function setBags($emails){
+        if (!empty($emails)) {
+            $emailBag = new BagHelper();
+            $emailBag->add((array)$emails);
+            $domainBag = $this->setEmailsDomains($emailBag);
+            $this->domains = $domainBag->all();
+        }
+    }
+
+    /**
+     * Returns results
+     * @return array
+     */
+    public function getResults()
+    {
+        return $this->results;
+    }
+
+    /**
+     * Sets the email addresses that should be validated.
+     *
+     * @param BagHelper $emailBag
+     *
+     * @return BagHelper $domainBag
+     */
+    public function setEmailsDomains(BagHelper $emailBag)
+    {
+        $domainBag = new BagHelper();
+
+        foreach ($emailBag as $key => $emails) {
+            foreach ($emails as $email) {
+
+                $mail = new Email($email);
+
+                list($user, $domain) = $mail->parse();
+
+                $domainBag->set($domain, $user, false);
+
+            }
+        }
+
+        return $domainBag;
+    }
+
+    /**
+     * Sets the email address to use as the sender/validator.
+     *
+     * @param string $email
+     *
+     * @return void
+     */
+    public function setSender($email)
+    {
+        $mail = new Email($email);
+        $parts = $mail->parse();
+
+        $this->fromUser = $parts[0];
+        $this->fromDomain = $parts[1];
+    }
+
+    /**
+     * Helper to set results for all the users on a domain to a specific value
+     *
+     * @param array $users    Array of users (usernames)
+     * @param Domain $domain   The domain
+     * @param int $val      Value to set
+     * @param String $info  Optional , can be used to give additional information about the result
+     */
+    private function setDomainResults($users, Domain $domain, $val, $info='')
+    {
+        if (!is_array($users)) {
+            $users = (array)$users;
+        }
+
+        foreach ($users as $user) {
+            $this->results[$user . '@' . $domain->getDomain()] = array(
+                'result' => $val,
+                'info'   => $info
+            );
+        }
+    }
+
+    /**
+     * @param $options array
+     * @throws Exception\ExceptionNoHelo
+     * @throws Exception\ExceptionNoMailFrom
+     * @throws Exception\ExceptionNoTimeout
+     */
+    private function runValidation($options){
         foreach ($this->domains as $domain => $users) {
 
             $mx = new Mx();
@@ -218,83 +291,6 @@ class ValidatorEmail
 
                 $i++;
             }
-        }
-
-        return $this->getResults();
-
-    }
-
-    /**
-     *
-     * @return array
-     */
-    public function getResults()
-    {
-        return $this->results;
-    }
-
-    /**
-     *
-     * Sets the email addresses that should be validated.
-     *
-     * @param EmailBag $emailBag
-     *
-     * @return DomainBag $domainBag
-     */
-    public function setEmailsDomains(EmailBag $emailBag)
-    {
-        $domainBag = new DomainBag();
-
-        foreach ($emailBag as $key => $emails) {
-            foreach ($emails as $email) {
-
-                $mail = new Email($email);
-
-                list($user, $domain) = $mail->parse();
-
-                $domainBag->set($domain, $user, false);
-
-            }
-        }
-
-        return $domainBag;
-    }
-
-    /**
-     * Sets the email address to use as the sender/validator.
-     *
-     * @param string $email
-     *
-     * @return void
-     */
-    public function setSender($email)
-    {
-        $mail = new Email($email);
-        $parts = $mail->parse();
-
-        $this->fromUser = $parts[0];
-        $this->fromDomain = $parts[1];
-    }
-
-    /**
-     * Helper to set results for all the users on a domain to a specific value
-     *
-     * @param array $users    Array of users (usernames)
-     * @param Domain $domain   The domain
-     * @param int $val      Value to set
-     * @param String $info  Optional , can be used to give additional information about the result
-     */
-    private function setDomainResults($users, Domain $domain, $val, $info='')
-    {
-        if (!is_array($users)) {
-            $users = (array)$users;
-        }
-
-        foreach ($users as $user) {
-            $this->results[$user . '@' . $domain->getDomain()] = [
-                'result' => $val,
-                'info'   => $info
-            ];
         }
     }
 }

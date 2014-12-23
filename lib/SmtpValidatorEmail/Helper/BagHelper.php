@@ -1,59 +1,51 @@
 <?php
-/**
- * Created by JetBrains PhpStorm.
- * User: daviddjian
- * Date: 31/07/13
- * Time: 20:37
- * To change this template use File | Settings | File Templates.
- */
 
-namespace SmtpValidatorEmail\Email;
-
+namespace SmtpValidatorEmail\Helper;
 
 /**
- * Class EmailBag is a container for emails.
+ * Class EmailBag is a container for container.
  *
  * @author  David DJIAN <david@traceweb.fr>
  *
  * @package SmtpValidatorEmail\Email
  */
-class EmailBag implements \IteratorAggregate, \Countable
+class BagHelper implements \IteratorAggregate, \Countable
 {
 
     /**
      * @var
      */
-    protected $emails;
+    protected $container;
 
     /**
      * Constructor.
      *
-     * @param array $emails An array of emails
+     * @param array $container An array of container
      *
      */
-    public function __construct(array $emails = array())
+    public function __construct(array $container = array())
     {
-        $this->emails = array();
-        foreach ($emails as $key => $values) {
+        $this->container = array();
+        foreach ($container as $key => $values) {
             $this->set($key, $values);
         }
     }
 
     /**
-     * Returns the emails as a string.
+     * Returns the container as a string.
      *
-     * @return string The emails
+     * @return string The container
      */
     public function __toString()
     {
-        if (!$this->emails) {
+        if (!$this->container) {
             return '';
         }
 
-        $max     = max(array_map('strlen', array_keys($this->emails))) + 1;
+        $max     = max(array_map('strlen', array_keys($this->container))) + 1;
         $content = '';
-        ksort($this->emails);
-        foreach ($this->emails as $name => $values) {
+        ksort($this->container);
+        foreach ($this->container as $name => $values) {
             $name = implode('-', array_map('ucfirst', explode('-', $name)));
             foreach ($values as $value) {
                 $content .= sprintf("%-{$max}s %s\r\n", $name . ':', $value);
@@ -64,14 +56,14 @@ class EmailBag implements \IteratorAggregate, \Countable
     }
 
     /**
-     * Returns the emails.
+     * Returns the container.
      *
-     * @return array An array of emails
+     * @return array An array of container
      *
      */
     public function all()
     {
-        return $this->emails;
+        return $this->container;
     }
 
     /**
@@ -82,31 +74,33 @@ class EmailBag implements \IteratorAggregate, \Countable
      */
     public function keys()
     {
-        return array_keys($this->emails);
+        return array_keys($this->container);
     }
 
     /**
-     * Replaces the current emails by a new set.
+     * Replaces the current container by a new set.
      *
-     * @param array $emails An array of emails
+     * @param array $emails An array of container
      *
      */
     public function replace(array $emails = array())
     {
-        $this->emails = array();
+        $this->container = array();
         $this->add($emails);
     }
 
     /**
-     * Adds new emails the current emails set.
+     * Adds new container the current container set.
      *
-     * @param array $emails An array of emails
+     * @param array $emails An array of container
      *
      */
     public function add(array $emails)
     {
-        foreach ($emails as $key => $values) {
-            $this->set($key, $values);
+        if(!empty ($emails) ){
+            foreach ($emails as $key => $values) {
+                $this->set($key, $values);
+            }
         }
     }
 
@@ -126,7 +120,7 @@ class EmailBag implements \IteratorAggregate, \Countable
             throw new \InvalidArgumentException('$key expected to be string or integer, got: '.gettype($key));
         }
 
-        if (!array_key_exists($key, $this->emails)) {
+        if (!array_key_exists($key, $this->container)) {
             if (null === $default) {
                 return $first ? null : array();
             }
@@ -135,10 +129,10 @@ class EmailBag implements \IteratorAggregate, \Countable
         }
 
         if ($first) {
-            return count($this->emails[$key]) ? $this->emails[$key][0] : $default;
+            return count($this->container[$key]) ? $this->container[$key][0] : $default;
         }
 
-        return $this->emails[$key];
+        return $this->container[$key];
     }
 
     /**
@@ -161,10 +155,10 @@ class EmailBag implements \IteratorAggregate, \Countable
 
         $values = array_values((array)$values);
 
-        if (true === $replace || !isset($this->emails[$key])) {
-            $this->emails[$key] = $values;
+        if (true === $replace || !isset($this->container[$key])) {
+            $this->container[$key] = $values;
         } else {
-            $this->emails[$key] = array_merge($this->emails[$key], $values);
+            $this->container[$key] = array_merge($this->container[$key], $values);
         }
     }
 
@@ -178,7 +172,7 @@ class EmailBag implements \IteratorAggregate, \Countable
      */
     public function has($key)
     {
-        return array_key_exists($key, $this->emails);
+        return array_key_exists($key, $this->container);
     }
 
     /**
@@ -203,27 +197,27 @@ class EmailBag implements \IteratorAggregate, \Countable
      */
     public function remove($key)
     {
-        unset($this->emails[$key]);
+        unset($this->container[$key]);
     }
 
     /**
-     * Returns an iterator for emails.
+     * Returns an iterator for container.
      *
      * @return \ArrayIterator An \ArrayIterator instance
      */
     public function count()
     {
-        return count($this->emails);
+        return count($this->container);
     }
 
     /**
-     * Returns the number of emails.
+     * Returns the number of container.
      *
-     * @return object The ArrayIterator object of emails
+     * @return object The ArrayIterator object of container
      */
     public function getIterator()
     {
-        return new \ArrayIterator($this->emails);
+        return new \ArrayIterator($this->container);
     }
 
 }

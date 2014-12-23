@@ -3,16 +3,11 @@
 
 namespace SmtpValidatorEmail\Tests\Email;
 
-use SmtpValidatorEmail\Email\EmailBag;
 
-class EmailBagTest extends \PHPUnit_Framework_TestCase
+use SmtpValidatorEmail\Helper\BagHelper;
+
+class BagHelperTest extends \PHPUnit_Framework_TestCase
 {
-
-    public function testConstructorNoArrayGivenDropsError()
-    {
-        $this->setExpectedException(get_class(new \PHPUnit_Framework_Error("", 0, "", 1)));
-        new EmailBag("notAnArrays");
-    }
 
     public function testToStringReturnsString()
     {
@@ -24,14 +19,14 @@ class EmailBagTest extends \PHPUnit_Framework_TestCase
             'some4@mail.com'
         );
 
-        $bag = new EmailBag($emails);
+        $bag = new BagHelper($emails);
         $this->assertTrue(is_string($bag->__toString()));
     }
 
     public function testReplaceNoArrayGivenDropsError()
     {
         $this->setExpectedException(get_class(new \PHPUnit_Framework_Error("", 0, "", 1)));
-        $bag = new EmailBag();
+        $bag = new BagHelper();
         $bag->replace("sdasd");
     }
 
@@ -45,7 +40,7 @@ class EmailBagTest extends \PHPUnit_Framework_TestCase
             'some4@mail.com'
         );
 
-        $bag = new EmailBag($emails);
+        $bag = new BagHelper($emails);
         $this->assertEquals('some3@mail.com', $bag->get(3));
     }
 
@@ -54,7 +49,7 @@ class EmailBagTest extends \PHPUnit_Framework_TestCase
         $this->setExpectedException(
             '\InvalidArgumentException'
         );
-        $bag = new EmailBag();
+        $bag = new BagHelper();
         $bag->get(new \stdClass());
     }
 
@@ -65,7 +60,7 @@ class EmailBagTest extends \PHPUnit_Framework_TestCase
             'traceweb' => 'david.djian@traceweb.fr'
         );
 
-        $bag = new EmailBag($emails);
+        $bag = new BagHelper($emails);
         $bag->get('codeforges');
     }
 
@@ -75,7 +70,7 @@ class EmailBagTest extends \PHPUnit_Framework_TestCase
             '\InvalidArgumentException'
         );
 
-        $bag = new EmailBag();
+        $bag = new BagHelper();
         $bag->set(new \stdClass(), 'email@dev.com');
     }
 
@@ -86,7 +81,7 @@ class EmailBagTest extends \PHPUnit_Framework_TestCase
             'traceweb' => 'david.djian@traceweb.fr'
         );
 
-        new EmailBag($emails);
+        new BagHelper($emails);
     }
 
     public function testHasReturnProperValue()
@@ -98,7 +93,7 @@ class EmailBagTest extends \PHPUnit_Framework_TestCase
             'some3@mail.com',
             'some4@mail.com'
         );
-        $bag = new EmailBag($emails);
+        $bag = new BagHelper($emails);
         $this->assertTrue($bag->has(1));
     }
 
@@ -109,7 +104,7 @@ class EmailBagTest extends \PHPUnit_Framework_TestCase
             'traceweb' => 'david.djian@traceweb.fr'
         );
 
-        $bag = new EmailBag($emails);
+        $bag = new BagHelper($emails);
         $this->assertTrue($bag->has('codeforges'));
     }
 
@@ -120,7 +115,7 @@ class EmailBagTest extends \PHPUnit_Framework_TestCase
             'traceweb' => 'david.djian@traceweb.fr'
         );
 
-        $bag = new EmailBag($emails);
+        $bag = new BagHelper($emails);
         $this->assertTrue($bag->contains('codeforges', 'ruben@codeforges.com'));
     }
 
@@ -131,7 +126,7 @@ class EmailBagTest extends \PHPUnit_Framework_TestCase
             'traceweb' => 'david.djian@traceweb.fr'
         );
 
-        $bag = new EmailBag($emails);
+        $bag = new BagHelper($emails);
         $beforeRemoveEmails = $bag->all();
         $bag->remove('codeforges');
         $this->assertNotEquals($beforeRemoveEmails, $bag->all());
@@ -149,7 +144,7 @@ class EmailBagTest extends \PHPUnit_Framework_TestCase
             'codeforges' => 'ruben@codeforges.com'
         );
 
-        $bag = new EmailBag($emails);
+        $bag = new BagHelper($emails);
         $oldEmails = $bag->all();
         $bag->replace($replaceEmails);
         $replaceEmails = $bag->all();
@@ -162,7 +157,7 @@ class EmailBagTest extends \PHPUnit_Framework_TestCase
             'codeforges' => 'ruben@codeforges.com',
             'traceweb' => 'david.djian@traceweb.fr'
         );
-        $bag = new EmailBag($emails);
+        $bag = new BagHelper($emails);
 
         $this->assertTrue( is_object($bag->getIterator()) );
     }
