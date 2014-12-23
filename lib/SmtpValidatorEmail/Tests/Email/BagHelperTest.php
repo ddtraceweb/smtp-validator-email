@@ -8,7 +8,7 @@ use SmtpValidatorEmail\Helper\BagHelper;
 
 class BagHelperTest extends \PHPUnit_Framework_TestCase
 {
-    
+
     public function testToStringReturnsString()
     {
         $emails = array (
