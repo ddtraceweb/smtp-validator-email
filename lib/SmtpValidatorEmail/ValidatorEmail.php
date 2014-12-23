@@ -291,10 +291,10 @@ class ValidatorEmail
         }
 
         foreach ($users as $user) {
-            $this->results[$user . '@' . $domain->getDomain()] = [
+            $this->results[$user . '@' . $domain->getDomain()] = array(
                 'result' => $val,
                 'info'   => $info
-            ];
+            );
         }
     }
 }
