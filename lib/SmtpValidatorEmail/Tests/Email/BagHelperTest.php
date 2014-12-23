@@ -8,13 +8,7 @@ use SmtpValidatorEmail\Helper\BagHelper;
 
 class BagHelperTest extends \PHPUnit_Framework_TestCase
 {
-
-    public function testConstructorNoArrayGivenDropsError()
-    {
-        $this->setExpectedException(get_class(new \PHPUnit_Framework_Error("", 0, "", 1)));
-        new BagHelper("notAnArray");
-    }
-
+    
     public function testToStringReturnsString()
     {
         $emails = array (
