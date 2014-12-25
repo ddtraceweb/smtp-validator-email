@@ -336,7 +336,7 @@ class Smtp
                 $isValid             = 1;
             } catch (ExceptionUnexpectedResponse $e) {
                 if($this->logPath){
-                    $this->writeLog('Unexpected response to RCPT TO: ' . $e->getMessage());
+                    $this->writeLog('Unexpected response to RCPT TO: ' . $e->getMessage().' | server response :'.fgets($this->socket, 1024));
                 }
             }
         } catch (ExceptionSmtpValidatorEmail $e) {
@@ -541,8 +541,6 @@ class Smtp
     }
 
     private function writeLog($line){
-        $file = fopen($this->logPath , 'rw' );
-        fwrite($file,$line);
-        fclose($file);
+        file_put_contents($this->logPath, $line,FILE_APPEND);
     }
 }
