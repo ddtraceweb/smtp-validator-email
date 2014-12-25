@@ -56,6 +56,11 @@ class Smtp
     );
 
     /**
+     * @var string path to logs dir
+     */
+    private $logPath ;
+
+    /**
      * Timeout values for various commands (in seconds) per RFC 2821
      * @see expect()
      */
@@ -134,6 +139,7 @@ class Smtp
      */
     public function __construct(array $options)
     {
+        $this->logPath = isset($options['logPath']) ? $options['logPath'] : false;
         $this->options = $options;
     }
 
@@ -329,10 +335,14 @@ class Smtp
                 $this->state['rcpt'] = true;
                 $isValid             = 1;
             } catch (ExceptionUnexpectedResponse $e) {
-                //'Unexpected response to RCPT TO: ' . $e->getMessage();
+                if($this->logPath){
+                    $this->writeLog('Unexpected response to RCPT TO: ' . $e->getMessage().' | server response :'.fgets($this->socket, 1024));
+                }
             }
         } catch (ExceptionSmtpValidatorEmail $e) {
-            //'Sending RCPT TO failed: ' . $e->getMessage()
+            if($this->logPath){
+                $this->writeLog('Sending RCPT TO failed: ' . $e->getMessage());
+            }
         }
 
         return $isValid;
@@ -394,6 +404,9 @@ class Smtp
     {
         // must be connected
         if (!$this->isConnect()) {
+            if($this->logPath){
+                $this->writeLog('No connection');
+            }
             throw new ExceptionNoConnection('No connection');
         }
 
@@ -401,8 +414,10 @@ class Smtp
         $result = fwrite($this->socket, $cmd . self::CRLF);
         // did the send work?
         if ($result === false) {
-            throw new ExceptionSendFailed('Send failed ' .
-            'on: ' . $this->host );
+            if($this->logPath){
+                $this->writeLog('Send failed on: ' . $this->host);
+            }
+            throw new ExceptionSendFailed('Send failed on: '. $this->host );
         }
 
         return $result;
@@ -421,6 +436,9 @@ class Smtp
     public function recv($timeout = null)
     {
         if (!$this->isConnect()) {
+            if($this->logPath){
+                $this->writeLog('No connection');
+            }
             throw new ExceptionNoConnection('No connection');
         }
         // timeout specified?
@@ -433,10 +451,16 @@ class Smtp
         // have we timed out?
         $info = stream_get_meta_data($this->socket);
         if (!empty($info['timed_out'])) {
+            if($this->logPath){
+                $this->writeLog('Timed out in recv , response: '.$line);
+            }
             throw new ExceptionTimeout('Timed out in recv');
         }
         // did we actually receive anything?
         if ($line === false) {
+            if($this->logPath){
+                $this->writeLog('No response in recv: '.$line);
+            }
             throw new ExceptionNoResponse('No response in recv');
         }
 
@@ -514,5 +538,9 @@ class Smtp
         $this->state['helo'] = false;
         $this->state['mail'] = false;
         $this->state['rcpt'] = false;
+    }
+
+    private function writeLog($line){
+        file_put_contents($this->logPath, $line,FILE_APPEND);
     }
 }
