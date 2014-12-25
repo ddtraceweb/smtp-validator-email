@@ -63,6 +63,7 @@ class ValidatorEmail
             'delaySleep' => array(0),
             'noCommIsValid' => 0,
             'catchAllIsValid' => 1,
+            'logPath' =>null
         );
 
         $options = array_merge($defaultOptions,$options);
@@ -185,7 +186,8 @@ class ValidatorEmail
             $loopStop = 0;
             while ($i < $count && $loopStop != 1) {
 
-                $smtp = new Smtp(array('fromDomain' => $this->fromDomain, 'fromUser' => $this->fromUser));
+                $smtp = new Smtp(array('fromDomain' => $this->fromDomain, 'fromUser' => $this->fromUser, 'logPath' => $options['logPath'] ));
+
                 if (array_key_exists('timeout', $options)) {
                     $smtp->timeout = $options['timeout'];
                 }
