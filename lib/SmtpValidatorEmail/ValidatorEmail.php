@@ -41,8 +41,14 @@ class ValidatorEmail
      */
     protected $results = array();
 
+    /**
+     * @var array
+     */
+    protected $options = array();
 
     /**
+     * Constructs the validator
+     *
      * @param array|string $emails
      * @param string $sender
      * @param array $options
@@ -63,21 +69,12 @@ class ValidatorEmail
             'delaySleep' => array(0),
             'noCommIsValid' => 0,
             'catchAllIsValid' => 1,
-            'logPath' =>null
+            'logPath' => null
         );
 
-        $options = array_merge($defaultOptions,$options);
+        $this->options = array_merge($defaultOptions,$options);
         $this->setSender($sender);
         $this->setBags($emails);
-
-        if (!is_array($this->domains) || empty($this->domains)) {
-            return $this->results;
-        }
-
-        $this->runValidation($options);
-
-        return $this->getResults();
-
     }
 
     /**
@@ -98,6 +95,9 @@ class ValidatorEmail
      */
     public function getResults()
     {
+        if(!$this->results){
+            $this->runValidation($this->options);
+        }
         return $this->results;
     }
 
@@ -162,6 +162,7 @@ class ValidatorEmail
                 'result' => $val,
                 'info'   => $info
             );
+
         }
     }
 
@@ -213,7 +214,7 @@ class ValidatorEmail
                 // are we connected?
                 if ($smtp->isConnect()) {
 
-
+                    // TODO : Make a dynamic sleep timeout
                     sleep($options['delaySleep'][$i]);
 
                     // say helo, and continue if we can talk
@@ -256,10 +257,12 @@ class ValidatorEmail
 
                             // if we're still connected, try issuing rcpts
                             if ($smtp->isConnect()) {
+                                // TODO: log the noop results ( can cause disconnects )
                                 $smtp->noop();
                                 // rcpt to for each user
                                 foreach ($users as $user) {
                                     $address = $user . '@' . $dom->getDomain();
+                                    // Sets the results to an integer 0 ( failure ) or 1 ( success )
                                     $this->results[$address] = $smtp->rcpt($address);
 
                                     if ($this->results[$address] == 1) {
