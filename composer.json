@@ -16,10 +16,17 @@
       "name": "David DJIAN",
       "email": "david@traceweb.fr",
       "homepage": "http://www.traceweb.fr"
+    },
+    {
+      "name": "Ruben Movsesyan",
+      "email": "ruben@codeforges.com",
+      "homepage": "https://github.com/rubenCodeforges"
     }
   ],
   "require": {
-    "php": ">=5.3.3"
+    "php": ">=5.3.3",
+    "symfony/event-dispatcher": "3.0.*@dev",
+    "symfony/config": "3.0.*@dev"
   },
   "require-dev": {
     "phpunit/phpunit": "4.2.*@dev"
