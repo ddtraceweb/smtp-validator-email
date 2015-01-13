@@ -10,15 +10,8 @@
 namespace SmtpValidatorEmail\Smtp;
 
 use SmtpValidatorEmail\Domain\Domain;
-use SmtpValidatorEmail\Exception\ExceptionNoConnection;
-use SmtpValidatorEmail\Exception\ExceptionNoHelo;
-use SmtpValidatorEmail\Exception\ExceptionNoMailFrom;
-use SmtpValidatorEmail\Exception\ExceptionNoResponse;
-use SmtpValidatorEmail\Exception\ExceptionNoTimeout;
-use SmtpValidatorEmail\Exception\ExceptionSendFailed;
-use SmtpValidatorEmail\Exception\ExceptionSmtpValidatorEmail;
-use SmtpValidatorEmail\Exception\ExceptionTimeout;
-use SmtpValidatorEmail\Exception\ExceptionUnexpectedResponse;
+use SmtpValidatorEmail\Exception as Exception ;
+use SmtpValidatorEmail\Configs\ConfigReader;
 
 /**
  * Class Smtp
@@ -26,11 +19,6 @@ use SmtpValidatorEmail\Exception\ExceptionUnexpectedResponse;
  */
 class Smtp
 {
-    /**
-     * default smtp port
-     * @var int
-     */
-    public $port = 25;
     /**
      * @var
      */
@@ -61,19 +49,9 @@ class Smtp
     private $logPath ;
 
     /**
-     * Timeout values for various commands (in seconds) per RFC 2821
-     * @see expect()
+     * @var array configs loaded from yml
      */
-    protected $commandTimeouts = array(
-        'ehlo' => 120,
-        'helo' => 120,
-        'tls'  => 180, // start tls
-        'mail' => 300, // mail from
-        'rcpt' => 300, // rcpt to,
-        'rset' => 30,
-        'quit' => 60,
-        'noop' => 60
-    );
+    private $config;
 
     /**
      * some utils contants
@@ -81,50 +59,9 @@ class Smtp
     const CRLF = "\r\n";
 
     /**
-     * some smtp response codes
-     */
-    const SMTP_CONNECT_SUCCESS     = 220;
-    const SMTP_QUIT_SUCCESS        = 221;
-    const SMTP_GENERIC_SUCCESS     = 250;
-    const SMTP_USER_NOT_LOCAL      = 251;
-    const SMTP_CANNOT_VRFY         = 252;
-    const SMTP_SERVICE_UNAVAILABLE = 421;
-
-    /**
-     * 450  Requested mail action not taken: mailbox unavailable
-     * (e.g., mailbox busy or temporarily blocked for policy reasons)
-     */
-    const SMTP_MAIL_ACTION_NOT_TAKEN = 450;
-
-    /**
-     * 451  Requested action aborted: local error in processing
-     */
-    const SMTP_MAIL_ACTION_ABORTED = 451;
-
-    /**
-     * 452  Requested action not taken: insufficient system storage
-     */
-    const SMTP_REQUESTED_ACTION_NOT_TAKEN = 452;
-
-    /**
-     * 550  Requested action not taken: mailbox unavailable (e.g., mailbox
-     * not found, no access, or command rejected for policy reasons)
-     */
-    const SMTP_MBOX_UNAVAILABLE = 550;
-
-    /**
-     * 554  Seen this from hotmail MTAs, in response to RSET
-     */
-    const SMTP_TRANSACTION_FAILED = 554;
-
-    /**
      * list of codes considered as "greylisted"
      */
-    private $greyListed = array(
-        self::SMTP_MAIL_ACTION_NOT_TAKEN,
-        self::SMTP_MAIL_ACTION_ABORTED,
-        self::SMTP_REQUESTED_ACTION_NOT_TAKEN
-    );
+    private $greyListed;
 
     public $options = array();
 
@@ -138,7 +75,13 @@ class Smtp
      * @param array $options
      */
     public function __construct(array $options)
-    {
+    {   $this->config = ConfigReader::readConfigs('../Configs/smtp.yml');
+        
+        $this->greyListed = array(
+            $this->config['responseCodes']['SMTP_MAIL_ACTION_NOT_TAKEN'],
+            $this->config['responseCodes']['SMTP_MAIL_ACTION_ABORTED'],
+            $this->config['responseCodes']['SMTP_REQUESTED_ACTION_NOT_TAKEN'],
+        );
         $this->logPath = isset($options['logPath']) ? $options['logPath'] : false;
         $this->options = $options;
     }
@@ -150,12 +93,12 @@ class Smtp
      * @param string $host   The host to connect to
      *
      * @return void
-     * @throws ExceptionNoConnection
-     * @throws ExceptionNoTimeout
+     * @throws Exception\ExceptionNoConnection
+     * @throws Exception\ExceptionNoTimeout
      */
     public function connect($host)
     {
-        $remoteSocket = $host . ':' . $this->port;
+        $remoteSocket = $host . ':' . $this->config['port'];
         $errnum       = 0;
         $errstr       = '';
         $this->host   = $remoteSocket;
@@ -172,13 +115,13 @@ class Smtp
 
         // connected?
         if (!$this->isConnect()) {
-            throw new ExceptionNoConnection('Cannot open a connection to remote host (' . $this->host . ')');
+            throw new Exception\ExceptionNoConnection('Cannot open a connection to remote host (' . $this->host . ')');
         }
 
         $result = stream_set_timeout($this->socket, $this->timeout);
 
         if (!$result) {
-            throw new ExceptionNoTimeout('Cannot set timeout');
+            throw new Exception\ExceptionNoTimeout('Cannot set timeout');
         }
     }
 
@@ -234,8 +177,10 @@ class Smtp
         }
 
         try {
-
-            $this->expect(self::SMTP_CONNECT_SUCCESS, $this->commandTimeouts['helo']);
+            $this->expect(
+                $this->config['responseCodes']['SMTP_CONNECT_SUCCESS'],
+                $this->config['commandTimeouts']['helo']
+            );
             $this->ehlo();
             // session started
             $this->state['helo'] = true;
@@ -243,7 +188,7 @@ class Smtp
             //todo: are we going for a TLS connection?
 
             return true;
-        } catch (ExceptionUnexpectedResponse $e) {
+        } catch (Exception\ExceptionUnexpectedResponse $e) {
             // connected, but received an unexpected response, so disconnect
 
             $this->disconnect(false);
@@ -263,12 +208,12 @@ class Smtp
         try {
             // modern, timeout 5 minutes
             $this->send('EHLO ' . $this->options['fromDomain']);
-            $this->expect(self::SMTP_GENERIC_SUCCESS, $this->commandTimeouts['ehlo']);
+            $this->expect($this->config['responseCodes']['SMTP_GENERIC_SUCCESS'], $this->config['commandTimeouts']['ehlo']);
 
-        } catch (ExceptionUnexpectedResponse $e) {
+        } catch (Exception\ExceptionUnexpectedResponse $e) {
             // legacy, timeout 5 minutes
             $this->send('HELO ' . $this->options['fromDomain']);
-            $this->expect(self::SMTP_GENERIC_SUCCESS, $this->commandTimeouts['helo']);
+            $this->expect($this->config['responseCodes']['SMTP_GENERIC_SUCCESS'], $this->config['commandTimeouts']['helo']);
         }
     }
 
@@ -278,24 +223,24 @@ class Smtp
      * @param string $from   The "From:" address
      *
      * @return bool          If MAIL FROM command was accepted or not
-     * @throws ExceptionNoHelo
+     * @throws Exception\ExceptionNoHelo
      */
     public function mail($from)
     {
         if (!$this->state['helo']) {
-            throw new ExceptionNoHelo('Need HELO before MAIL FROM');
+            throw new Exception\ExceptionNoHelo('Need HELO before MAIL FROM');
         }
         // issue MAIL FROM, 5 minute timeout
         $this->send('MAIL FROM:<' . $from . '>');
         try {
 
-            $this->expect(self::SMTP_GENERIC_SUCCESS, $this->commandTimeouts['mail']);
+            $this->expect($this->config['responseCodes']['SMTP_GENERIC_SUCCESS'], $this->config['commandTimeouts']['mail']);
             // set state flags
             $this->state['mail'] = true;
             $this->state['rcpt'] = false;
 
             return true;
-        } catch (ExceptionUnexpectedResponse $e) {
+        } catch (Exception\ExceptionUnexpectedResponse $e) {
             // got something unexpected in response to MAIL FROM
             // hotmail is know to do this, and is closing the connection
             // forcibly on their end, so I'm killing the socket here too
@@ -311,18 +256,18 @@ class Smtp
      * @param string $to Recipient's email address
      *
      * @return bool      Is the recipient accepted
-     * @throws ExceptionNoMailFrom
+     * @throws Exception\ExceptionNoMailFrom
      */
     public function rcpt($to)
     {
         // need to have issued MAIL FROM first
         if (!$this->state['mail']) {
-            throw new ExceptionNoMailFrom('Need MAIL FROM before RCPT TO');
+            throw new Exception\ExceptionNoMailFrom('Need MAIL FROM before RCPT TO');
         }
         $isValid       = 0;
         $expectedCodes = array(
-            self::SMTP_GENERIC_SUCCESS,
-            self::SMTP_USER_NOT_LOCAL
+            $this->config['responseCodes']['SMTP_GENERIC_SUCCESS'],
+            $this->config['responseCodes']['SMTP_USER_NOT_LOCAL']
         );
         if ($this->greyListedConsideredValid) {
             $expectedCodes = array_merge($expectedCodes, $this->greyListed);
@@ -332,15 +277,15 @@ class Smtp
             $this->send('RCPT TO:<' . $to . '>');
             // process the response
             try {
-                $this->expect($expectedCodes, $this->commandTimeouts['rcpt']);
+                $this->expect($expectedCodes, $this->config['commandTimeouts']['rcpt']);
                 $this->state['rcpt'] = true;
                 $isValid             = 1;
-            } catch (ExceptionUnexpectedResponse $e) {
+            } catch (Exception\ExceptionUnexpectedResponse $e) {
                 if($this->logPath){
                     $this->writeLog('Unexpected response to RCPT TO: ' . $e->getMessage().' | server response :'.fgets($this->socket, 1024));
                 }
             }
-        } catch (ExceptionSmtpValidatorEmail $e) {
+        } catch (Exception\ExceptionSmtpValidatorEmail $e) {
             if($this->logPath){
                 $this->writeLog('Sending RCPT TO failed: ' . $e->getMessage());
             }
@@ -358,12 +303,12 @@ class Smtp
         $this->send('RSET');
         // MS ESMTP doesn't follow RFC according to ZF tracker, see [ZF-1377]
         $expected = array(
-            self::SMTP_GENERIC_SUCCESS,
-            self::SMTP_CONNECT_SUCCESS,
+            $this->config['responseCodes']['SMTP_GENERIC_SUCCESS'],
+            $this->config['responseCodes']['SMTP_CONNECT_SUCCESS'],
             // hotmail returns this o_O
-            self::SMTP_TRANSACTION_FAILED
+            $this->config['responseCodes']['SMTP_TRANSACTION_FAILED']
         );
-        $this->expect($expected, $this->commandTimeouts['rset']);
+        $this->expect($expected, $this->config['commandTimeouts']['rset']);
         $this->state['mail'] = false;
         $this->state['rcpt'] = false;
     }
@@ -378,7 +323,7 @@ class Smtp
         if ($this->state['helo']) {
             // [TODO] might need a try/catch here to cover some edge cases...
             $this->send('QUIT');
-            $this->expect(self::SMTP_QUIT_SUCCESS, $this->commandTimeouts['quit']);
+            $this->expect($this->config['responseCodes']['SMTP_QUIT_SUCCESS'], $this->config['commandTimeouts']['quit']);
         }
     }
 
@@ -389,7 +334,7 @@ class Smtp
     public function noop()
     {
         $this->send('NOOP');
-        $this->expect(self::SMTP_GENERIC_SUCCESS, $this->commandTimeouts['noop']);
+        $this->expect($this->config['responseCodes']['SMTP_GENERIC_SUCCESS'], $this->config['commandTimeouts']['noop']);
     }
 
     /**
@@ -398,8 +343,8 @@ class Smtp
      * @param string $cmd    The cmd to send
      *
      * @return int|bool      Number of bytes written to the stream
-     * @throws ExceptionNoConnection
-     * @throws ExceptionSendFailed
+     * @throws Exception\ExceptionNoConnection
+     * @throws Exception\ExceptionSendFailed
      */
     public function send($cmd)
     {
@@ -408,7 +353,7 @@ class Smtp
             if($this->logPath){
                 $this->writeLog('No connection');
             }
-            throw new ExceptionNoConnection('No connection');
+            throw new Exception\ExceptionNoConnection('No connection');
         }
 
         // write the cmd to the connection stream
@@ -418,7 +363,7 @@ class Smtp
             if($this->logPath){
                 $this->writeLog('Send failed on: ' . $this->host);
             }
-            throw new ExceptionSendFailed('Send failed on: '. $this->host );
+            throw new Exception\ExceptionSendFailed('Send failed on: '. $this->host );
         }
 
         return $result;
@@ -430,9 +375,9 @@ class Smtp
      * @param int $timeout Timeout in seconds
      *
      * @return string
-     * @throws ExceptionNoConnection
-     * @throws ExceptionTimeout
-     * @throws ExceptionNoResponse
+     * @throws Exception\ExceptionNoConnection
+     * @throws Exception\ExceptionTimeout
+     * @throws Exception\ExceptionNoResponse
      */
     public function recv($timeout = null)
     {
@@ -440,7 +385,7 @@ class Smtp
             if($this->logPath){
                 $this->writeLog('No connection');
             }
-            throw new ExceptionNoConnection('No connection');
+            throw new Exception\ExceptionNoConnection('No connection');
         }
         // timeout specified?
         if ($timeout !== null) {
@@ -455,14 +400,14 @@ class Smtp
             if($this->logPath){
                 $this->writeLog('Timed out in recv , response: '.$line);
             }
-            throw new ExceptionTimeout('Timed out in recv');
+            throw new Exception\ExceptionTimeout('Timed out in recv');
         }
         // did we actually receive anything?
         if ($line === false) {
             if($this->logPath){
                 $this->writeLog('No response in recv: '.$line);
             }
-            throw new ExceptionNoResponse('No response in recv');
+            throw new Exception\ExceptionNoResponse('No response in recv');
         }
 
         return $line;
@@ -475,7 +420,7 @@ class Smtp
      * @param int          $timeout   The timeout for this individual command, if any
      *
      * @return string        The last text message received
-     * @throws ExceptionUnexpectedResponse
+     * @throws Exception\ExceptionUnexpectedResponse
      */
     public function expect($codes, $timeout = null)
     {
@@ -493,10 +438,10 @@ class Smtp
             }
             sscanf($line, '%d%s', $code, $text);
             if ($code === null || !in_array($code, $codes)) {
-                throw new ExceptionUnexpectedResponse($line);
+                throw new Exception\ExceptionUnexpectedResponse($line);
             }
 
-        } catch (ExceptionNoResponse $e) {
+        } catch (Exception\ExceptionNoResponse $e) {
 
             // no response in expect() probably means that the
             // remote server forcibly closed the connection so
