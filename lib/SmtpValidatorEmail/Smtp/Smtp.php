@@ -223,7 +223,7 @@ class Smtp
 
     /**
      * Sends a HELO/EHLO sequence
-     * @todo Implement TLS
+     * @todo Implement TLS, add logs
      * @return bool  True if successful, false otherwise
      */
     public function helo()
@@ -257,6 +257,7 @@ class Smtp
      * Send EHLO or HELO, depending on what's supported by the remote host.
      * @return void
      */
+    // TODO: Log this
     protected function ehlo()
     {
         try {
