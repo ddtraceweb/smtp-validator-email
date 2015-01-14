@@ -75,7 +75,7 @@ class Smtp
      * @param array $options
      */
     public function __construct(array $options)
-    {   $this->config = ConfigReader::readConfigs('../Configs/smtp.yml');
+    {   $this->config = ConfigReader::readConfigs(__DIR__.'/../Configs/smtp.yml');
         
         $this->greyListed = array(
             $this->config['responseCodes']['SMTP_MAIL_ACTION_NOT_TAKEN'],
