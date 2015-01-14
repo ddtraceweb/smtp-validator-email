@@ -4,32 +4,80 @@
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "ec82da8a36dba2c8bfc27204b7fce520",
+    "hash": "d691188cc0bdcb62bd28844213cdf042",
     "packages": [
         {
+            "name": "symfony/config",
+            "version": "v2.6.3",
+            "target-dir": "Symfony/Component/Config",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/Config.git",
+                "reference": "d94f222eff99a22ce313555b78642b4873418d56"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/Config/zipball/d94f222eff99a22ce313555b78642b4873418d56",
+                "reference": "d94f222eff99a22ce313555b78642b4873418d56",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.3",
+                "symfony/filesystem": "~2.3"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "2.6-dev"
+                }
+            },
+            "autoload": {
+                "psr-0": {
+                    "Symfony\\Component\\Config\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Symfony Community",
+                    "homepage": "http://symfony.com/contributors"
+                },
+                {
+                    "name": "Fabien Potencier",
+                    "email": "fabien@symfony.com"
+                }
+            ],
+            "description": "Symfony Config Component",
+            "homepage": "http://symfony.com",
+            "time": "2015-01-03 08:01:59"
+        },
+        {
             "name": "symfony/event-dispatcher",
-            "version": "dev-master",
+            "version": "v2.6.3",
             "target-dir": "Symfony/Component/EventDispatcher",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/EventDispatcher.git",
-                "reference": "fc68ffa937eb0cf415c682e3cb1141748b67aba5"
+                "reference": "40ff70cadea3785d83cac1c8309514b36113064e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/EventDispatcher/zipball/fc68ffa937eb0cf415c682e3cb1141748b67aba5",
-                "reference": "fc68ffa937eb0cf415c682e3cb1141748b67aba5",
+                "url": "https://api.github.com/repos/symfony/EventDispatcher/zipball/40ff70cadea3785d83cac1c8309514b36113064e",
+                "reference": "40ff70cadea3785d83cac1c8309514b36113064e",
                 "shasum": ""
             },
             "require": {
-                "php": ">=5.5.9"
+                "php": ">=5.3.3"
             },
             "require-dev": {
                 "psr/log": "~1.0",
-                "symfony/config": "~2.7|~3.0",
-                "symfony/dependency-injection": "~2.7|~3.0",
-                "symfony/expression-language": "~2.7|~3.0",
-                "symfony/stopwatch": "~2.7|~3.0"
+                "symfony/config": "~2.0,>=2.0.5",
+                "symfony/dependency-injection": "~2.6",
+                "symfony/expression-language": "~2.6",
+                "symfony/stopwatch": "~2.3"
             },
             "suggest": {
                 "symfony/dependency-injection": "",
@@ -38,7 +86,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "3.0-dev"
+                    "dev-master": "2.6-dev"
                 }
             },
             "autoload": {
@@ -62,7 +110,54 @@
             ],
             "description": "Symfony EventDispatcher Component",
             "homepage": "http://symfony.com",
-            "time": "2015-01-08 17:12:45"
+            "time": "2015-01-05 14:28:40"
+        },
+        {
+            "name": "symfony/filesystem",
+            "version": "v2.6.3",
+            "target-dir": "Symfony/Component/Filesystem",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/Filesystem.git",
+                "reference": "a1f566d1f92e142fa1593f4555d6d89e3044a9b7"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/Filesystem/zipball/a1f566d1f92e142fa1593f4555d6d89e3044a9b7",
+                "reference": "a1f566d1f92e142fa1593f4555d6d89e3044a9b7",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.3"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "2.6-dev"
+                }
+            },
+            "autoload": {
+                "psr-0": {
+                    "Symfony\\Component\\Filesystem\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Symfony Community",
+                    "homepage": "http://symfony.com/contributors"
+                },
+                {
+                    "name": "Fabien Potencier",
+                    "email": "fabien@symfony.com"
+                }
+            ],
+            "description": "Symfony Filesystem Component",
+            "homepage": "http://symfony.com",
+            "time": "2015-01-03 21:13:09"
         }
     ],
     "packages-dev": [
@@ -813,7 +908,6 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
-        "symfony/event-dispatcher": 20,
         "phpunit/phpunit": 20
     },
     "prefer-stable": false,
