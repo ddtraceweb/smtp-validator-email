@@ -1,5 +1,5 @@
 port: 25
-commandTimeouts:
+commandTimeouts :
   ehlo: 120
   helo: 120
   tls: 180

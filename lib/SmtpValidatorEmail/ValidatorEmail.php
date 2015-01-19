@@ -13,6 +13,7 @@ use SmtpValidatorEmail\Domain\Domain;
 use SmtpValidatorEmail\Email\Email;
 use SmtpValidatorEmail\Exception\ExceptionNoConnection;
 use SmtpValidatorEmail\Helper\BagHelper;
+use SmtpValidatorEmail\Helper\EmailHelper;
 use SmtpValidatorEmail\Mx\Mx;
 use SmtpValidatorEmail\Smtp\Smtp;
 
@@ -58,6 +59,7 @@ class ValidatorEmail
      *      'domainMoreInfo' (bool) for have more information on domains of users.
      *      'delaySleep' is an array of delay(s) possible after connected Server to send the request SMTP.
      *      'catchAllIsValid' (int) can be 0 for false or 1 for true . Are 'catch-all' accounts considered valid or not?
+     *      'catchAllEnabled' (int) 0 off 1 on enables catchAll test , may take more time
      *      'noCommIsValid' Being unable to communicate with the remote MTA could mean an address
      *                      is invalid, but it might not, depending on your use case, set the
      *                      value appropriately.
@@ -69,8 +71,12 @@ class ValidatorEmail
             'delaySleep' => array(0),
             'noCommIsValid' => 0,
             'catchAllIsValid' => 1,
+            'catchAllEnabled' => 1,
+            'sameDomainLimit' => 3,
             'logPath' => null
         );
+
+        $emails = is_array($emails) ? EmailHelper::sortEmailsByDomain($emails) : $emails;
 
         $this->options = array_merge($defaultOptions,$options);
         $this->setSender($sender);
@@ -173,6 +179,8 @@ class ValidatorEmail
      * @throws Exception\ExceptionNoTimeout
      */
     private function runValidation($options){
+
+        // The foreach fires for each email in array
         foreach ($this->domains as $domain => $users) {
 
             $mx = new Mx();
@@ -235,32 +243,35 @@ class ValidatorEmail
 
                             $smtp->noop();
 
-                            // Do a catch-all test for the domain always.
+                            // Do a catch-all test for the domain .
                             // This increases checking time for a domain slightly,
                             // but doesn't confuse users.
-                            try{
-                                $isCatchallDomain = $smtp->acceptsAnyRecipient($dom);
-                            }catch (\Exception $e) {
-                                $this->setDomainResults($users, $dom, $options['catchAllIsValid'], 'error while on CatchAll test: '.$e );
-                            }
-
-
-                            // if a catchall domain is detected, and we consider
-                            // accounts on such domains as invalid, mark all the
-                            // users as invalid and move on
-                            if ($isCatchallDomain) {
-                                if (!$options['catchAllIsValid']) {
-                                    $this->setDomainResults($users, $dom, $options['catchAllIsValid'],'catch all detected');
-                                    continue;
+                            if($options['catchAllEnabled']){
+                                try{
+                                    $isCatchallDomain = $smtp->acceptsAnyRecipient($dom);
+                                }catch (\Exception $e) {
+                                    $this->setDomainResults($users, $dom, $options['catchAllIsValid'], 'error while on CatchAll test: '.$e );
+                                }
+                                // if a catchall domain is detected, and we consider
+                                // accounts on such domains as invalid, mark all the
+                                // users as invalid and move on
+                                if ($isCatchallDomain) {
+                                    if (!$options['catchAllIsValid']) {
+                                        $this->setDomainResults($users, $dom, $options['catchAllIsValid'],'catch all detected');
+                                        continue;
+                                    }
                                 }
                             }
 
                             // if we're still connected, try issuing rcpts
                             if ($smtp->isConnect()) {
-                                // TODO: log the noop results ( can cause disconnects )
                                 $smtp->noop();
+
+                                dump($users);
+
                                 // rcpt to for each user
                                 foreach ($users as $user) {
+                                    // TODO: An error from the SMTP couse a disconnect , need to implement a reconnect
                                     $address = $user . '@' . $dom->getDomain();
                                     // Sets the results to an integer 0 ( failure ) or 1 ( success )
                                     $this->results[$address] = $smtp->rcpt($address);
@@ -268,7 +279,15 @@ class ValidatorEmail
                                     if ($this->results[$address] == 1) {
                                         $loopStop = 1;
                                     }
+
+//                                    if( $userCounter >= $options["sameDomainLimit"] ){
+//                                        //TODO: the dump should go to log
+//                                        dump('Same domain limit reached, issuing  sleep for '.count($users).' sec');
+//                                        sleep(count($users));
+//                                        $userCounter = 0;
+//                                    }
                                     $smtp->noop();
+//                                    $userCounter++;
                                 }
                             }
 

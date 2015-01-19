@@ -26,6 +26,8 @@ class Email
      */
     public function __construct($email)
     {
+        // Clean string
+        $email = str_replace("\r","",$email);
         if(!is_string($email)){
             throw new \InvalidArgumentException('constructor expected string, got: '.gettype($email));
         }

@@ -365,7 +365,8 @@ class Smtp
             }
             throw new Exception\ExceptionSendFailed('Send failed on: '. $this->host );
         }
-
+        //TODO: Send cmd , put to log
+        // dump('Send: '.$cmd);
         return $result;
     }
 
@@ -409,7 +410,8 @@ class Smtp
             }
             throw new Exception\ExceptionNoResponse('No response in recv');
         }
-
+        // TODO: Debuging , this is the response from server, put to log
+        //dump('response: '.$line );
         return $line;
     }
 
