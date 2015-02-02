@@ -14,8 +14,10 @@ use SmtpValidatorEmail\Email\Email;
 use SmtpValidatorEmail\Exception\ExceptionNoConnection;
 use SmtpValidatorEmail\Helper\BagHelper;
 use SmtpValidatorEmail\Helper\EmailHelper;
+use SmtpValidatorEmail\Helper\SmtpTransportHelper;
 use SmtpValidatorEmail\Mx\Mx;
 use SmtpValidatorEmail\Smtp\Smtp;
+use Symfony\Component\Config\Definition\Exception\Exception;
 
 
 /**
@@ -195,28 +197,24 @@ class ValidatorEmail
             $loopStop = 0;
             while ($i < $count && $loopStop != 1) {
 
-                $smtp = new Smtp(array('fromDomain' => $this->fromDomain, 'fromUser' => $this->fromUser, 'logPath' => $options['logPath'] ));
+                // $smtp = new Smtp(array('fromDomain' => $this->fromDomain, 'fromUser' => $this->fromUser, 'logPath' => $options['logPath'] ));
+                $transport = new SmtpTransportHelper(array('fromDomain' => $this->fromDomain, 'fromUser' => $this->fromUser, 'logPath' => $options['logPath'] ));
+                $smtp = $transport->getSmtp();
 
                 if (array_key_exists('timeout', $options)) {
-                    $smtp->timeout = $options['timeout'];
+                    $smtp->setTimeout($options['timeout']);
                 }
 
-                // try each host
-                while (list($host) = each($mxs)) {
+                // try connecting to the remote host
+//                if( $result = $transport->connect($mxs) ) {
+//                    $this->setDomainResults($users, $dom, 0,$result);
+//                }
 
-                    // try connecting to the remote host
-                    try {
-
-                        $smtp->connect($host);
-
-                        if ($smtp->isConnect()) {
-                            break;
-                        }
-
-                    } catch (ExceptionNoConnection $e) {
-                        // unable to connect to host, so these addresses are invalid?
-                        $this->setDomainResults($users, $dom, 0,'unable to connect to host');
-                    }
+                try {
+                    $result = $transport->connect($mxs);
+                    $this->setDomainResults($users, $dom, 0,$result);
+                } catch (Exception $e) {
+                    dump('could not connect to host '.$mxs);
                 }
 
                 // are we connected?
@@ -267,11 +265,17 @@ class ValidatorEmail
                             if ($smtp->isConnect()) {
                                 $smtp->noop();
 
-                                dump($users);
-
                                 // rcpt to for each user
                                 foreach ($users as $user) {
                                     // TODO: An error from the SMTP couse a disconnect , need to implement a reconnect
+                                    if(!$smtp->isConnect()){
+                                        dump('Smtp not connected , trying reconnect');
+                                        $transport->reconnect($this->fromUser . '@' . $this->fromDomain);
+                                        dump($smtp->isConnect());
+                                        if(!$smtp->isConnect()){
+                                            die;
+                                        }
+                                    }
                                     $address = $user . '@' . $dom->getDomain();
                                     // Sets the results to an integer 0 ( failure ) or 1 ( success )
                                     $this->results[$address] = $smtp->rcpt($address);

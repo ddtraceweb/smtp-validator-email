@@ -260,6 +260,7 @@ class Smtp
      */
     public function rcpt($to)
     {
+        dump($this->state['mail']);
         // need to have issued MAIL FROM first
         if (!$this->state['mail']) {
             throw new Exception\ExceptionNoMailFrom('Need MAIL FROM before RCPT TO');
