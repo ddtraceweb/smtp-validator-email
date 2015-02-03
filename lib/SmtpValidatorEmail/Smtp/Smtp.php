@@ -260,19 +260,21 @@ class Smtp
      */
     public function rcpt($to)
     {
-        dump($this->state['mail']);
         // need to have issued MAIL FROM first
         if (!$this->state['mail']) {
             throw new Exception\ExceptionNoMailFrom('Need MAIL FROM before RCPT TO');
         }
+
         $isValid       = 0;
         $expectedCodes = array(
             $this->config['responseCodes']['SMTP_GENERIC_SUCCESS'],
             $this->config['responseCodes']['SMTP_USER_NOT_LOCAL']
         );
+
         if ($this->greyListedConsideredValid) {
             $expectedCodes = array_merge($expectedCodes, $this->greyListed);
         }
+
         // issue RCPT TO, 5 minute timeout
         try {
             $this->send('RCPT TO:<' . $to . '>');
@@ -383,12 +385,6 @@ class Smtp
      */
     public function recv($timeout = null)
     {
-        if (!$this->isConnect()) {
-            if($this->logPath){
-                $this->writeLog('No connection');
-            }
-            throw new Exception\ExceptionNoConnection('No connection');
-        }
         // timeout specified?
         if ($timeout !== null) {
             stream_set_timeout($this->socket, $timeout);
