@@ -1,6 +1,6 @@
 <?php
 
-namespace SmtpValidatorEmail\Helper\InterfaceHelper;
+namespace SmtpValidatorEmail\Helper\Interfaces;
 
 interface TransportInterface {
 

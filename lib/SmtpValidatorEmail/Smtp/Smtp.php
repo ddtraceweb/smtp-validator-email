@@ -9,7 +9,7 @@
 
 namespace SmtpValidatorEmail\Smtp;
 
-use SmtpValidatorEmail\Domain\Domain;
+use SmtpValidatorEmail\Entity\Domain;
 use SmtpValidatorEmail\Exception as Exception ;
 use SmtpValidatorEmail\Configs\ConfigReader;
 
@@ -485,7 +485,5 @@ class Smtp
         $this->state['rcpt'] = false;
     }
 
-    private function writeLog($line){
-        file_put_contents($this->logPath, $line,FILE_APPEND);
-    }
+
 }

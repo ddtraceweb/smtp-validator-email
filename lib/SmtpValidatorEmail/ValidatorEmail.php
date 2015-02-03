@@ -9,14 +9,10 @@
 
 namespace SmtpValidatorEmail;
 
-use SmtpValidatorEmail\Domain\Domain;
-use SmtpValidatorEmail\Email\Email;
-use SmtpValidatorEmail\Exception\ExceptionNoConnection;
-use SmtpValidatorEmail\Helper\BagHelper;
-use SmtpValidatorEmail\Helper\EmailHelper;
-use SmtpValidatorEmail\Helper\SmtpTransportHelper;
+use SmtpValidatorEmail\Entity\Domain;
+use SmtpValidatorEmail\Helper\TransportHelper;
+use SmtpValidatorEmail\Helper\ValidatorInitHelper;
 use SmtpValidatorEmail\Mx\Mx;
-use SmtpValidatorEmail\Smtp\Smtp;
 use Symfony\Component\Config\Definition\Exception\Exception;
 
 
@@ -24,31 +20,8 @@ use Symfony\Component\Config\Definition\Exception\Exception;
  * Class ValidatorEmail
  * @package SmtpValidatorEmail
  */
-class ValidatorEmail
+class ValidatorEmail extends ValidatorInitHelper
 {
-    /**
-     * @var array
-     */
-    protected $domains;
-    /**
-     * @var
-     */
-    protected $fromUser = 'user';
-    /**
-     * @var
-     */
-    protected $fromDomain = 'localhost';
-
-    /**
-     * @var array
-     */
-    protected $results = array();
-
-    /**
-     * @var array
-     */
-    protected $options = array();
-
     /**
      * Constructs the validator
      *
@@ -68,33 +41,7 @@ class ValidatorEmail
      */
     public function __construct($emails = array(), $sender, $options = array())
     {
-        $defaultOptions = array(
-            'domainMoreInfo' => false,
-            'delaySleep' => array(0),
-            'noCommIsValid' => 0,
-            'catchAllIsValid' => 1,
-            'catchAllEnabled' => 1,
-            'sameDomainLimit' => 3,
-            'logPath' => null
-        );
-
-        $emails = is_array($emails) ? EmailHelper::sortEmailsByDomain($emails) : $emails;
-
-        $this->options = array_merge($defaultOptions,$options);
-        $this->setSender($sender);
-        $this->setBags($emails);
-    }
-
-    /**
-     * @param array|string $emails
-     */
-    public function setBags($emails){
-        if (!empty($emails)) {
-            $emailBag = new BagHelper();
-            $emailBag->add((array)$emails);
-            $domainBag = $this->setEmailsDomains($emailBag);
-            $this->domains = $domainBag->all();
-        }
+        $this->init($emails,$sender,$options);
     }
 
     /**
@@ -103,75 +50,10 @@ class ValidatorEmail
      */
     public function getResults()
     {
-        if(!$this->results){
+        if(!$this->results->hasResults()){
             $this->runValidation($this->options);
         }
-        return $this->results;
-    }
-
-    /**
-     * Sets the email addresses that should be validated.
-     *
-     * @param BagHelper $emailBag
-     *
-     * @return BagHelper $domainBag
-     */
-    public function setEmailsDomains(BagHelper $emailBag)
-    {
-        $domainBag = new BagHelper();
-
-        foreach ($emailBag as $key => $emails) {
-            foreach ($emails as $email) {
-
-                $mail = new Email($email);
-
-                list($user, $domain) = $mail->parse();
-
-                $domainBag->set($domain, $user, false);
-
-            }
-        }
-
-        return $domainBag;
-    }
-
-    /**
-     * Sets the email address to use as the sender/validator.
-     *
-     * @param string $email
-     *
-     * @return void
-     */
-    public function setSender($email)
-    {
-        $mail = new Email($email);
-        $parts = $mail->parse();
-
-        $this->fromUser = $parts[0];
-        $this->fromDomain = $parts[1];
-    }
-
-    /**
-     * Helper to set results for all the users on a domain to a specific value
-     *
-     * @param array $users    Array of users (usernames)
-     * @param Domain $domain   The domain
-     * @param int $val      Value to set
-     * @param String $info  Optional , can be used to give additional information about the result
-     */
-    private function setDomainResults($users, Domain $domain, $val, $info='')
-    {
-        if (!is_array($users)) {
-            $users = (array)$users;
-        }
-
-        foreach ($users as $user) {
-            $this->results[$user . '@' . $domain->getDomain()] = array(
-                'result' => $val,
-                'info'   => $info
-            );
-
-        }
+        return $this->results->getResults();
     }
 
     /**
@@ -198,7 +80,7 @@ class ValidatorEmail
             while ($i < $count && $loopStop != 1) {
 
                 // $smtp = new Smtp(array('fromDomain' => $this->fromDomain, 'fromUser' => $this->fromUser, 'logPath' => $options['logPath'] ));
-                $transport = new SmtpTransportHelper(array('fromDomain' => $this->fromDomain, 'fromUser' => $this->fromUser, 'logPath' => $options['logPath'] ));
+                $transport = new TransportHelper(array('fromDomain' => $this->fromDomain, 'fromUser' => $this->fromUser ));
                 $smtp = $transport->getSmtp();
 
                 if (array_key_exists('timeout', $options)) {
@@ -212,7 +94,7 @@ class ValidatorEmail
 
                 try {
                     $result = $transport->connect($mxs);
-                    $this->setDomainResults($users, $dom, 0,$result);
+                    $this->results->setDomainResults($users, $dom, 0,$result);
                 } catch (Exception $e) {
                     dump('could not connect to host '.$mxs);
                 }
@@ -229,7 +111,7 @@ class ValidatorEmail
                         // try issuing MAIL FROM
                         if (!($smtp->mail($this->fromUser . '@' . $this->fromDomain))) {
                             // MAIL FROM not accepted, we can't talk
-                            $this->setDomainResults($users, $dom, $options['noCommIsValid'],'MAIL FROM not accepted');
+                            $this->results->setDomainResults($users, $dom, $options['noCommIsValid'],'MAIL FROM not accepted');
                         }
 
                         /**
@@ -248,14 +130,14 @@ class ValidatorEmail
                                 try{
                                     $isCatchallDomain = $smtp->acceptsAnyRecipient($dom);
                                 }catch (\Exception $e) {
-                                    $this->setDomainResults($users, $dom, $options['catchAllIsValid'], 'error while on CatchAll test: '.$e );
+                                    $this->results->setDomainResults($users, $dom, $options['catchAllIsValid'], 'error while on CatchAll test: '.$e );
                                 }
                                 // if a catchall domain is detected, and we consider
                                 // accounts on such domains as invalid, mark all the
                                 // users as invalid and move on
                                 if ($isCatchallDomain) {
                                     if (!$options['catchAllIsValid']) {
-                                        $this->setDomainResults($users, $dom, $options['catchAllIsValid'],'catch all detected');
+                                        $this->results->setDomainResults($users, $dom, $options['catchAllIsValid'],'catch all detected');
                                         continue;
                                     }
                                 }
@@ -278,9 +160,11 @@ class ValidatorEmail
                                     }
                                     $address = $user . '@' . $dom->getDomain();
                                     // Sets the results to an integer 0 ( failure ) or 1 ( success )
-                                    $this->results[$address] = $smtp->rcpt($address);
 
-                                    if ($this->results[$address] == 1) {
+                                    // TODO: Impliment setter
+                                    $this->results->setResultByAddress($address,$smtp->rcpt($address));
+
+                                    if ($this->results->getResultByAddress($address) == 1) {
                                         $loopStop = 1;
                                     }
 
@@ -307,15 +191,16 @@ class ValidatorEmail
 
                     } else {
                         // we didn't get a good response to helo and should be disconnected already
-                        $this->setDomainResults($users, $dom, $options['noCommIsValid'],'bad response on helo');
+                        $this->results->setDomainResults($users, $dom, $options['noCommIsValid'],'bad response on helo');
                     }
                 } else {
-                    $this->setDomainResults($users, $dom, 0,'no connection ');
+                    $this->results->setDomainResults($users, $dom, 0,'no connection ');
                 }
 
-                if ($options['domainMoreInfo']) {
-                    $this->results[$dom->getDomain()] = $dom->getDescription();
-                }
+                // TODO: Create setter for domainMoreInfo
+//                if ($options['domainMoreInfo']) {
+//                    $this->results->get[$dom->getDomain()] = $dom->getDescription();
+//                }
 
                 $i++;
             }

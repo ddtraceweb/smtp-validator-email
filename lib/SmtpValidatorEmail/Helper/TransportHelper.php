@@ -3,11 +3,11 @@
 namespace SmtpValidatorEmail\Helper;
 
 
-use SmtpValidatorEmail\Helper\InterfaceHelper\TransportInterface;
+use SmtpValidatorEmail\Helper\Interfaces\TransportInterface;
 use SmtpValidatorEmail\Smtp\Smtp;
 use SmtpValidatorEmail\Exception as Exception ;
 
-class SmtpTransportHelper implements TransportInterface{
+class TransportHelper implements TransportInterface{
     private $smtp;
 
     private $host;
