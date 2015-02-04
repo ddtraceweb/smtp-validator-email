@@ -3,10 +3,10 @@
 namespace SmtpValidatorEmail\Helper;
 
 
+use SmtpValidatorEmail\Exception\ExceptionNoConnection;
 use SmtpValidatorEmail\Helper\Interfaces\TransportInterface;
 use SmtpValidatorEmail\Service\StatusManager;
 use SmtpValidatorEmail\Smtp\Smtp;
-use SmtpValidatorEmail\Exception as Exception ;
 
 class TransportHelper implements TransportInterface{
     private $smtp;
@@ -35,7 +35,7 @@ class TransportHelper implements TransportInterface{
                     break;
                 }
 
-            } catch (Exception\ExceptionNoConnection $e) {
+            } catch (ExceptionNoConnection $e) {
                 // unable to connect to host, so these addresses are invalid?
                 $status = 'unable to connect to host';
             }
