@@ -4,6 +4,7 @@ namespace SmtpValidatorEmail\Helper;
 
 
 use SmtpValidatorEmail\Helper\Interfaces\TransportInterface;
+use SmtpValidatorEmail\Service\StatusManager;
 use SmtpValidatorEmail\Smtp\Smtp;
 use SmtpValidatorEmail\Exception as Exception ;
 
@@ -14,8 +15,8 @@ class TransportHelper implements TransportInterface{
 
     private $connected = false;
 
-    public function __construct ($options) {
-        $this->smtp = new Smtp($options);
+    public function __construct (StatusManager $statusManager,$options) {
+        $this->smtp = new Smtp($statusManager,$options);
     }
 
     public function connect ($mxs) {

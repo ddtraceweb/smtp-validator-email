@@ -13,6 +13,7 @@ use SmtpValidatorEmail\Entity\Domain;
 use SmtpValidatorEmail\Helper\TransportHelper;
 use SmtpValidatorEmail\Helper\ValidatorInitHelper;
 use SmtpValidatorEmail\Mx\Mx;
+use SmtpValidatorEmail\Service\StatusManager;
 use Symfony\Component\Config\Definition\Exception\Exception;
 
 
@@ -22,6 +23,11 @@ use Symfony\Component\Config\Definition\Exception\Exception;
  */
 class ValidatorEmail extends ValidatorInitHelper
 {
+    /**
+     * @var StatusManager;
+     */
+    private $statManager;
+
     /**
      * Constructs the validator
      *
@@ -42,6 +48,7 @@ class ValidatorEmail extends ValidatorInitHelper
     public function __construct($emails = array(), $sender, $options = array())
     {
         $this->init($emails,$sender,$options);
+        $this->statManager = new StatusManager();
     }
 
     /**
@@ -53,7 +60,7 @@ class ValidatorEmail extends ValidatorInitHelper
         if(!$this->results->hasResults()){
             $this->runValidation($this->options);
         }
-        return $this->results->getResults();
+        return $this->statManager->getResults();
     }
 
     /**
@@ -78,8 +85,6 @@ class ValidatorEmail extends ValidatorInitHelper
             $i = 0;
             $loopStop = 0;
             while ($i < $count && $loopStop != 1) {
-
-                // $smtp = new Smtp(array('fromDomain' => $this->fromDomain, 'fromUser' => $this->fromUser, 'logPath' => $options['logPath'] ));
                 $transport = new TransportHelper(array('fromDomain' => $this->fromDomain, 'fromUser' => $this->fromUser ));
                 $smtp = $transport->getSmtp();
 
@@ -87,16 +92,11 @@ class ValidatorEmail extends ValidatorInitHelper
                     $smtp->setTimeout($options['timeout']);
                 }
 
-                // try connecting to the remote host
-//                if( $result = $transport->connect($mxs) ) {
-//                    $this->setDomainResults($users, $dom, 0,$result);
-//                }
-
                 try {
                     $result = $transport->connect($mxs);
-                    $this->results->setDomainResults($users, $dom, 0,$result);
+                    $this->statManager->setStatus($users, $dom, 0, $result);
                 } catch (Exception $e) {
-                    dump('could not connect to host '.$mxs);
+                    $this->statManager->setStatus($users, $dom, 0, $result,'could not connect to host '.$mxs);
                 }
 
                 // are we connected?
@@ -111,7 +111,7 @@ class ValidatorEmail extends ValidatorInitHelper
                         // try issuing MAIL FROM
                         if (!($smtp->mail($this->fromUser . '@' . $this->fromDomain))) {
                             // MAIL FROM not accepted, we can't talk
-                            $this->results->setDomainResults($users, $dom, $options['noCommIsValid'],'MAIL FROM not accepted');
+                            $this->statManager->setStatus($users, $dom, $options['noCommIsValid'],'MAIL FROM not accepted');
                         }
 
                         /**
@@ -130,14 +130,14 @@ class ValidatorEmail extends ValidatorInitHelper
                                 try{
                                     $isCatchallDomain = $smtp->acceptsAnyRecipient($dom);
                                 }catch (\Exception $e) {
-                                    $this->results->setDomainResults($users, $dom, $options['catchAllIsValid'], 'error while on CatchAll test: '.$e );
+                                    $this->statManager->setStatus($users, $dom, $options['catchAllIsValid'], 'error while on CatchAll test: '.$e );
                                 }
                                 // if a catchall domain is detected, and we consider
                                 // accounts on such domains as invalid, mark all the
                                 // users as invalid and move on
                                 if ($isCatchallDomain) {
                                     if (!$options['catchAllIsValid']) {
-                                        $this->results->setDomainResults($users, $dom, $options['catchAllIsValid'],'catch all detected');
+                                        $this->statManager->setStatus($users, $dom, $options['catchAllIsValid'],'catch all detected');
                                         continue;
                                     }
                                 }
@@ -151,57 +151,45 @@ class ValidatorEmail extends ValidatorInitHelper
                                 foreach ($users as $user) {
                                     // TODO: An error from the SMTP couse a disconnect , need to implement a reconnect
                                     if(!$smtp->isConnect()){
-                                        dump('Smtp not connected , trying reconnect');
                                         $transport->reconnect($this->fromUser . '@' . $this->fromDomain);
-                                        dump($smtp->isConnect());
-                                        if(!$smtp->isConnect()){
-                                            die;
-                                        }
                                     }
                                     $address = $user . '@' . $dom->getDomain();
                                     // Sets the results to an integer 0 ( failure ) or 1 ( success )
 
                                     // TODO: Impliment setter
-                                    $this->results->setResultByAddress($address,$smtp->rcpt($address));
+                                    $this->statManager->updateStatus($address,$smtp->rcpt($address));
 
-                                    if ($this->results->getResultByAddress($address) == 1) {
+                                    if ($this->statManager->getStatus($address) == 1) {
                                         $loopStop = 1;
                                     }
 
-//                                    if( $userCounter >= $options["sameDomainLimit"] ){
-//                                        //TODO: the dump should go to log
-//                                        dump('Same domain limit reached, issuing  sleep for '.count($users).' sec');
+                                    // TODO: Dynamic sleep if to much users
+//                                    if( count($users) >= $options["sameDomainLimit"] ){
 //                                        sleep(count($users));
 //                                        $userCounter = 0;
 //                                    }
                                     $smtp->noop();
-//                                    $userCounter++;
                                 }
                             }
-
                             // saying buh-bye if we're still connected, cause we're done here
                             if ($smtp->isConnect()) {
-                                // issue a rset for all the things we just made the MTA do
                                 $smtp->rset();
-                                // kiss it goodbye
                                 $smtp->disconnect();
                             }
-
                         }
 
                     } else {
                         // we didn't get a good response to helo and should be disconnected already
-                        $this->results->setDomainResults($users, $dom, $options['noCommIsValid'],'bad response on helo');
+                        $this->statManager->setStatus($users, $dom, $options['noCommIsValid'],'bad response on helo');
                     }
                 } else {
-                    $this->results->setDomainResults($users, $dom, 0,'no connection ');
+                    $this->statManager->setStatus($users, $dom, 0,'no connection ');
                 }
 
                 // TODO: Create setter for domainMoreInfo
 //                if ($options['domainMoreInfo']) {
 //                    $this->results->get[$dom->getDomain()] = $dom->getDescription();
 //                }
-
                 $i++;
             }
         }
