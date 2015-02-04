@@ -9,10 +9,10 @@ class StatusManager {
     /**
      * @var Results
      */
-    private $results;
+    private $results = null;
 
     public function __construct(){
-        $this->model = new Results();
+        $this->results = new Results();
     }
 
     public function setStatus($users, Domain $domain, $val, $info='') {
