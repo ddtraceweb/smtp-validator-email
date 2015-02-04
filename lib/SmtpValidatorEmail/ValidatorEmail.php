@@ -60,7 +60,7 @@ class ValidatorEmail extends ValidatorInitHelper
         if(!$this->results->hasResults()){
             $this->runValidation($this->options);
         }
-        return $this->statManager->getResults();
+        return $this->statManager->getStatus();
     }
 
     /**
@@ -85,7 +85,7 @@ class ValidatorEmail extends ValidatorInitHelper
             $i = 0;
             $loopStop = 0;
             while ($i < $count && $loopStop != 1) {
-                $transport = new TransportHelper(array('fromDomain' => $this->fromDomain, 'fromUser' => $this->fromUser ));
+                $transport = new TransportHelper($this->statManager,array('fromDomain' => $this->fromDomain, 'fromUser' => $this->fromUser ));
                 $smtp = $transport->getSmtp();
 
                 if (array_key_exists('timeout', $options)) {
