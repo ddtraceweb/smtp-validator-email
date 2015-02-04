@@ -46,12 +46,12 @@ class Smtp
 
 
     /**
-     * @var array configs loaded from yml
+     * @var mixed configs loaded from yml
      */
     private $config;
 
     /**
-     * some utils contants
+     * some utils constants
      */
     const CRLF = "\r\n";
 
@@ -74,7 +74,7 @@ class Smtp
      * @param array $options ("fromDomain" => value, "fromUser" => value);
      * must contains the variables from sender
      */
-    public function __construct(StatusManager $statusManager,array $options)
+    public function __construct(StatusManager $statusManager, array $options)
     {
 
         $this->config = ConfigReader::readConfigs(__DIR__.'/../Configs/smtp.yml');
