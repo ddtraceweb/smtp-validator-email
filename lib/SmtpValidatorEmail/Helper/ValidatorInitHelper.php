@@ -35,6 +35,11 @@ class ValidatorInitHelper{
      */
     protected $options = array();
 
+    /**
+     * @param array|String $emails
+     * @param $sender
+     * @param array $options
+     */
     public function init($emails = array(), $sender, $options = array()) {
         $defaultOptions = array(
             'domainMoreInfo' => false,

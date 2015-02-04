@@ -15,6 +15,13 @@ class StatusManager {
         $this->results = new Results();
     }
 
+    /**
+     * @param array $users    Array of users (usernames)
+     * @param Domain $domain   The domain
+     * @param int $val      Value to set
+     * @param String $info  Optional , can be used to give additional information about the result
+     */
+
     public function setStatus($users, Domain $domain, $val, $info='') {
         $this->results->setDomainResults($users,$domain, $val,$info);
     }
@@ -24,10 +31,10 @@ class StatusManager {
     }
 
     /**
-     * @param null $address optional , if set gets the status by address
+     * @param String $address optional , if set gets the status by address
      * @return array
      */
-    public function getStatus( $address = null ) {
+    public function getStatus( $address = '' ) {
         if($address){
             return $this->results->getResultByAddress($address);
         }else {
@@ -36,5 +43,8 @@ class StatusManager {
 
     }
 
+    public function checkStatus() {
+        return $this->results->hasResults();
+    }
     // TODO: Create loger method
 }

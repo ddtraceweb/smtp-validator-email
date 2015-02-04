@@ -73,6 +73,9 @@ class TransportHelper implements TransportInterface{
         return $this->connected;
     }
 
+    /**
+     * @return Smtp
+     */
     public function getSmtp () {
         return $this->smtp;
     }

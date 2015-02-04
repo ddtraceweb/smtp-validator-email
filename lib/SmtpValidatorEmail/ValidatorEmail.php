@@ -57,7 +57,7 @@ class ValidatorEmail extends ValidatorInitHelper
      */
     public function getResults()
     {
-        if(!$this->results->hasResults()){
+        if(!$this->statManager->checkStatus()){
             $this->runValidation($this->options);
         }
         return $this->statManager->getStatus();
@@ -89,14 +89,14 @@ class ValidatorEmail extends ValidatorInitHelper
                 $smtp = $transport->getSmtp();
 
                 if (array_key_exists('timeout', $options)) {
-                    $smtp->setTimeout($options['timeout']);
+                    $transport->setTimeout($options['timeout']);
                 }
 
                 try {
                     $result = $transport->connect($mxs);
                     $this->statManager->setStatus($users, $dom, 0, $result);
                 } catch (Exception $e) {
-                    $this->statManager->setStatus($users, $dom, 0, $result,'could not connect to host '.$mxs);
+                    $this->statManager->setStatus($users, $dom, 0, 0, 'could not connect to host '.$mxs);
                 }
 
                 // are we connected?
