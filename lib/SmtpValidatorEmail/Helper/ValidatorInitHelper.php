@@ -54,6 +54,7 @@ class ValidatorInitHelper{
         $emails = is_array($emails) ? EmailHelper::sortEmailsByDomain($emails) : $emails;
 
         $this->options = array_merge($defaultOptions,$options);
+
         $this->setSender($sender);
         $this->setBags($emails);
         $this->results = new Results();

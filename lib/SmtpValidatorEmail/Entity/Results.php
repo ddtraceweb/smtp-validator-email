@@ -10,7 +10,7 @@ class Results {
      *
      * @param array $users    Array of users (usernames)
      * @param Domain $domain   The domain
-     * @param int $val      Value to set
+     * @param int $val      Value to set 1 or 0 ( Valid,Invalid )
      * @param String $info  Optional , can be used to give additional information about the result
      */
     public function setDomainResults($users, Domain $domain, $val, $info='')

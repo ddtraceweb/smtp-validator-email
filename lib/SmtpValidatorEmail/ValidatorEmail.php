@@ -9,12 +9,9 @@
 
 namespace SmtpValidatorEmail;
 
-use SmtpValidatorEmail\Entity\Domain;
-use SmtpValidatorEmail\Helper\TransportHelper;
+use SmtpValidatorEmail\Helper\ValidationHelper;
 use SmtpValidatorEmail\Helper\ValidatorInitHelper;
-use SmtpValidatorEmail\Mx\Mx;
 use SmtpValidatorEmail\Service\StatusManager;
-use Symfony\Component\Config\Definition\Exception\Exception;
 
 
 /**
@@ -74,45 +71,27 @@ class ValidatorEmail extends ValidatorInitHelper
         // The foreach fires for each email in array
         foreach ($this->domains as $domain => $users) {
 
-            $mx = new Mx();
-            $mxs = $mx->getEntries($domain);
+            //TODO:Start validiation
 
-            $dom = new Domain($domain);
-            $dom->addDescription(array('users' => $users));
-            $dom->addDescription(array('mxs' => $mxs));
 
             $count = count($options['delaySleep']);
             $i = 0;
             $loopStop = 0;
             while ($i < $count && $loopStop != 1) {
-                $transport = new TransportHelper($this->statManager,array('fromDomain' => $this->fromDomain, 'fromUser' => $this->fromUser ));
+                $validator = new ValidationHelper($this->statManager,$this->options,array("fromDomain" => $this->fromDomain, "fromUser" => $this->fromUser));
+                $validator->startValidation($domain,$users);
+                $transport = $validator->getTransport();
                 $smtp = $transport->getSmtp();
 
-                if (array_key_exists('timeout', $options)) {
-                    $transport->setTimeout($options['timeout']);
-                }
+                $validator->establishConnection();
 
-                try {
-                    $result = $transport->connect($mxs);
-                    $this->statManager->setStatus($users, $dom, $result);
-                } catch (Exception $e) {
-                    $this->statManager->setStatus($users, $dom, 0, 'could not connect to host '.$mxs);
-                }
-
-                // are we connected?
                 if ($smtp->isConnect()) {
-
-                    // TODO : Make a dynamic sleep timeout
                     sleep($options['delaySleep'][$i]);
-
                     // say helo, and continue if we can talk
                     if ($smtp->helo()) {
 
                         // try issuing MAIL FROM
-                        if (!($smtp->mail($this->fromUser . '@' . $this->fromDomain))) {
-                            // MAIL FROM not accepted, we can't talk
-                            $this->statManager->setStatus($users, $dom, $options['noCommIsValid'],'MAIL FROM not accepted');
-                        }
+                        $validator->mailFrom($this->fromUser,$this->fromDomain);
 
                         /**
                          * if we're still connected, proceed (cause we might get
@@ -120,76 +99,29 @@ class ValidatorEmail extends ValidatorInitHelper
                          * see mail() for more
                          */
                         if ( $smtp->isConnect()) {
-
-                            $smtp->noop();
-
-                            // Do a catch-all test for the domain .
-                            // This increases checking time for a domain slightly,
-                            // but doesn't confuse users.
-                            if($options['catchAllEnabled']){
-                                try{
-                                    $isCatchallDomain = $smtp->acceptsAnyRecipient($dom);
-                                }catch (\Exception $e) {
-                                    $this->statManager->setStatus($users, $dom, $options['catchAllIsValid'], 'error while on CatchAll test: '.$e );
-                                }
-                                // if a catchall domain is detected, and we consider
-                                // accounts on such domains as invalid, mark all the
-                                // users as invalid and move on
-                                if ($isCatchallDomain) {
-                                    if (!$options['catchAllIsValid']) {
-                                        $this->statManager->setStatus($users, $dom, $options['catchAllIsValid'],'catch all detected');
-                                        continue;
-                                    }
-                                }
+                            if( $validator->catchAll() ){
+                                continue;
                             }
 
                             // if we're still connected, try issuing rcpts
                             if ($smtp->isConnect()) {
-                                $smtp->noop();
-
-                                // rcpt to for each user
-                                foreach ($users as $user) {
-                                    // TODO: An error from the SMTP couse a disconnect , need to implement a reconnect
-                                    if(!$smtp->isConnect()){
-                                        $transport->reconnect($this->fromUser . '@' . $this->fromDomain);
-                                    }
-                                    $address = $user . '@' . $dom->getDomain();
-                                    // Sets the results to an integer 0 ( failure ) or 1 ( success )
-
-                                    // TODO: Impliment setter
-                                    $this->statManager->updateStatus($address,$smtp->rcpt($address));
-
-                                    if ($this->statManager->getStatus($address) == 1) {
-                                        $loopStop = 1;
-                                    }
-
-                                    // TODO: Dynamic sleep if to much users
-//                                    if( count($users) >= $options["sameDomainLimit"] ){
-//                                        sleep(count($users));
-//                                        $userCounter = 0;
-//                                    }
-                                    $smtp->noop();
+                                if ($validator->rcptEachUser($this->fromUser,$this->fromDomain)) {
+                                    $loopStop = 1;
                                 }
                             }
                             // saying buh-bye if we're still connected, cause we're done here
-                            if ($smtp->isConnect()) {
-                                $smtp->rset();
-                                $smtp->disconnect();
-                            }
+                            $validator->closeConnection();
                         }
 
                     } else {
                         // we didn't get a good response to helo and should be disconnected already
-                        $this->statManager->setStatus($users, $dom, $options['noCommIsValid'],'bad response on helo');
+                        $this->statManager->setStatus($users, $validator->getDom(), $options['noCommIsValid'],'bad response on helo');
                     }
                 } else {
-                    $this->statManager->setStatus($users, $dom, 0,'no connection ');
+                    $this->statManager->setStatus($users, $validator->getDom(), 0,'no connection ');
                 }
-
-                // TODO: Create setter for domainMoreInfo
-//                if ($options['domainMoreInfo']) {
-//                    $this->results->get[$dom->getDomain()] = $dom->getDescription();
-//                }
+                //TODO: Finish method;
+                $validator->getDomainInfo();
                 $i++;
             }
         }
