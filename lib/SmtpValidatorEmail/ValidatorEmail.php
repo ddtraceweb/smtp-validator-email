@@ -94,9 +94,9 @@ class ValidatorEmail extends ValidatorInitHelper
 
                 try {
                     $result = $transport->connect($mxs);
-                    $this->statManager->setStatus($users, $dom, 0, $result);
+                    $this->statManager->setStatus($users, $dom, $result);
                 } catch (Exception $e) {
-                    $this->statManager->setStatus($users, $dom, 0, 0, 'could not connect to host '.$mxs);
+                    $this->statManager->setStatus($users, $dom, 0, 'could not connect to host '.$mxs);
                 }
 
                 // are we connected?
