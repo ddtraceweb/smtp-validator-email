@@ -7,7 +7,7 @@
  * To change this template use File | Settings | File Templates.
  */
 
-namespace SmtpValidatorEmail\Email;
+namespace SmtpValidatorEmail\Entity;
 
 /**
  * Class Email
@@ -26,6 +26,8 @@ class Email
      */
     public function __construct($email)
     {
+        // Clean string
+        $email = str_replace("\r","",$email);
         if(!is_string($email)){
             throw new \InvalidArgumentException('constructor expected string, got: '.gettype($email));
         }

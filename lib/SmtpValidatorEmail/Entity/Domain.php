@@ -7,7 +7,7 @@
  * To change this template use File | Settings | File Templates.
  */
 
-namespace SmtpValidatorEmail\Domain;
+namespace SmtpValidatorEmail\Entity;
 
 /**
  * Class Domain

@@ -1,0 +1,27 @@
+port: 25
+commandTimeouts :
+  ehlo: 120
+  helo: 120
+  tls: 180
+  mail: 300
+  rcpt: 300
+  rset: 30
+  quit: 60
+  noop: 60
+responseCodes:
+  SMTP_CONNECT_SUCCESS: 220
+  SMTP_QUIT_SUCCESS: 221
+  SMTP_GENERIC_SUCCESS: 250
+  SMTP_USER_NOT_LOCAL: 251
+  SMTP_CANNOT_VRFY: 252
+  SMTP_SERVICE_UNAVAILABLE: 421
+  # 450  Requested mail action not taken: mailbox unavailable (e.g., mailbox busy or temporarily blocked for policy reasons)
+  SMTP_MAIL_ACTION_NOT_TAKEN: 450
+  # 451  Requested action aborted: local error in processing
+  SMTP_MAIL_ACTION_ABORTED: 451
+  # 452  Requested action not taken: insufficient system storage
+  SMTP_REQUESTED_ACTION_NOT_TAKEN: 452
+  # Requested action not taken: mailbox unavailable (e.g., mailbox not found, no access, or command rejected for policy reasons)
+  SMTP_MBOX_UNAVAILABLE: 550
+  # Seen this from hotmail MTAs, in response to RSET
+  SMTP_TRANSACTION_FAILED: 554
