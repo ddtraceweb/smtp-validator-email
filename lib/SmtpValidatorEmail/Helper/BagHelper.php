@@ -3,7 +3,7 @@
 namespace SmtpValidatorEmail\Helper;
 
 /**
- * Class EmailBag is a container for container.
+ * Class BagHelper is a container for container.
  *
  * @author  David DJIAN <david@traceweb.fr>
  *

@@ -7,6 +7,10 @@ use SmtpValidatorEmail\ValidatorEmail;
 class ValidationEmailTest extends \PHPUnit_Framework_TestCase{
 
 
+    /**
+     *  Entry point test
+     */
+
     public function testGetResults()
     {
         $emails = array(
