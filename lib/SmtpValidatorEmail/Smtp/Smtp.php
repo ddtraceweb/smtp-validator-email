@@ -142,24 +142,19 @@ class Smtp
      */
     public function acceptsAnyRecipient(Domain $domain)
     {
-
         $test     = 'catch-all-test-' . time();
         $accepted = $this->rcpt($test . '@' . $domain->getDomain());
         if ($accepted) {
-
             $domain->addDescription(array('catchall' => 1));
-
             // success on a non-existing address is a "catch-all"
             return 1;
         }
-
         // log the case in which we get disconnected
         // while trying to perform a catchall detect
         $this->noop();
         if (!($this->isConnect())) {
 
         }
-
         // nb: disconnects are considered as a non-catch-all case this way
         // this might not be true always
         return 0;

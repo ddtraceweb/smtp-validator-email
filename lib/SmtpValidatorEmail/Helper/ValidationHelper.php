@@ -81,8 +81,7 @@ class ValidationHelper {
         }
 
         try {
-            $result = $this->transport->connect($this->mxs);
-            $this->statusManager->setStatus($this->users, $this->dom, $result);
+            $this->transport->connect($this->mxs);
         } catch (\Exception $e) {
             $this->statusManager->setStatus($this->users, $this->dom, 0, 'could not connect to host '.$this->mxs);
         }
@@ -94,13 +93,15 @@ class ValidationHelper {
      * but doesn't confuse users.
      */
     public function catchAll() {
-
+        $this->getTransport()->getSmtp()->noop();
         if($this->options['catchAllEnabled']){
             try{
                 $isCatchallDomain = $this->transport->getSmtp()->acceptsAnyRecipient($this->dom);
+
             }catch (\Exception $e) {
                 $this->statusManager->setStatus($this->users, $this->dom, $this->options['catchAllIsValid'], 'error while on CatchAll test: '.$e );
             }
+
             // if a catchall domain is detected, and we consider
             // accounts on such domains as invalid, mark all the
             // users as invalid and move on
@@ -108,8 +109,6 @@ class ValidationHelper {
                 if (!$this->options['catchAllIsValid']) {
                     $this->statusManager->setStatus($this->users, $this->dom, $this->options['catchAllIsValid'],'catch all detected');
                     return true;
-                }else{
-                   return false;
                 }
             }
         }

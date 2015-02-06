@@ -44,8 +44,8 @@ class ValidatorEmail extends ValidatorInitHelper
      */
     public function __construct($emails = array(), $sender, $options = array())
     {
-        $this->init($emails,$sender,$options);
         $this->statManager = new StatusManager();
+        $this->init($emails,$sender,$options);
     }
 
     /**
@@ -72,8 +72,6 @@ class ValidatorEmail extends ValidatorInitHelper
         foreach ($this->domains as $domain => $users) {
 
             //TODO:Start validiation
-
-
             $count = count($options['delaySleep']);
             $i = 0;
             $loopStop = 0;
@@ -100,11 +98,12 @@ class ValidatorEmail extends ValidatorInitHelper
                          */
                         if ( $smtp->isConnect()) {
                             if( $validator->catchAll() ){
+                                $loopStop = 1;
                                 continue;
                             }
 
                             // if we're still connected, try issuing rcpts
-                            if ($smtp->isConnect()&&$validator->rcptEachUser($this->fromUser,$this->fromDomain)) {
+                            if ($smtp->isConnect() && $validator->rcptEachUser($this->fromUser,$this->fromDomain)) {
                                 $loopStop = 1;
                             }
                             // saying buh-bye if we're still connected, cause we're done here
