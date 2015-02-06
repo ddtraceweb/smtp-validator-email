@@ -104,10 +104,8 @@ class ValidatorEmail extends ValidatorInitHelper
                             }
 
                             // if we're still connected, try issuing rcpts
-                            if ($smtp->isConnect()) {
-                                if ($validator->rcptEachUser($this->fromUser,$this->fromDomain)) {
-                                    $loopStop = 1;
-                                }
+                            if ($smtp->isConnect()&&$validator->rcptEachUser($this->fromUser,$this->fromDomain)) {
+                                $loopStop = 1;
                             }
                             // saying buh-bye if we're still connected, cause we're done here
                             $validator->closeConnection();
