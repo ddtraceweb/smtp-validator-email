@@ -48,7 +48,6 @@ class ValidatorInitHelper{
             'catchAllIsValid' => 0,
             'catchAllEnabled' => 1,
             'sameDomainLimit' => 3,
-            'logPath' => null
         );
 
         $emails = is_array($emails) ? EmailHelper::sortEmailsByDomain($emails) : $emails;

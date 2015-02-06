@@ -111,16 +111,6 @@ var_dump($validator->getResults());
 ```
 
 
-* Enabling logging : just handle a logPath to the options array
-
-```php
-//enable logging
-$options = array('logPath' => __DIR__.'/log.txt');
-
-//Handle $options to the constructor as third parameter
-$validator = new ValidatorEmail($email, $from, $options);
-```
-
 
 * Avaialable default options
 
@@ -129,8 +119,8 @@ array(
   'domainMoreInfo' => false,
   'delaySleep' => array(0),
   'noCommIsValid' => 0,
-  'catchAllIsValid' => 1,
-  'logPath' => null
+  'catchAllIsValid' => 0,
+  'catchAllEnabled' => 1,
 );
 ```
 
