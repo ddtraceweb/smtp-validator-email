@@ -115,7 +115,7 @@ class ValidatorEmail extends ValidatorInitHelper
                         $this->statManager->setStatus($users, $validator->getDom(), $options['noCommIsValid'],'bad response on helo');
                     }
                 } else {
-                    $this->statManager->setStatus($users, $validator->getDom(), 0,'no connection ');
+                    $this->statManager->setStatus($users, $validator->getDom(), 0,'no connection');
                 }
                 //TODO: Finish method;
                 $validator->getDomainInfo();

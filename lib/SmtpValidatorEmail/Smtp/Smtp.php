@@ -93,7 +93,7 @@ class Smtp
      *
      * @param string $host   The host to connect to
      *
-     * @return void
+     * @return String weather a error string or success string
      * @throws Exception\ExceptionNoConnection
      * @throws Exception\ExceptionNoTimeout
      */
@@ -116,14 +116,15 @@ class Smtp
 
         // connected?
         if (!$this->isConnect()) {
-            throw new Exception\ExceptionNoConnection('Cannot open a connection to remote host (' . $this->host . ')');
+            return 'no connection';
         }
 
         $result = stream_set_timeout($this->socket, $this->timeout);
 
         if (!$result) {
-            throw new Exception\ExceptionNoTimeout('Cannot set timeout');
+            return 'Cannot set timeout';
         }
+        return 'connected';
     }
 
     /**

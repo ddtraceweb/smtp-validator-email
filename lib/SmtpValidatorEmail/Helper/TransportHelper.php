@@ -28,43 +28,32 @@ class TransportHelper implements TransportInterface{
         $status = null;
 
         foreach($mxs as $host=>$priority){
-            // try connecting to the remote host
-            try {
-
-                $this->smtp->connect($host);
-
-                if ( $this->smtp->isConnect() ) {
+                if ( $connection = $this->smtp->connect($host) == 'connected' ) {
                     $this->setHost($host);
                     $status = 1;
                     $this->connected = true;
                     break;
+                }else{
+                    $status = $connection;
                 }
 
-            } catch (ExceptionNoConnection $e) {
-                // unable to connect to host, so these addresses are invalid?
-                $status = 'unable to connect to host';
-            }
         }
         return $status;
     }
 
     public function reconnect($from) {
         $status = null;
-        try {
-            $this->smtp->connect($this->host);
-
-            if($this->smtp->isConnect()){
+            if($connection = $this->smtp->connect($this->host)=='connected'){
                 $this->smtp->helo();
                 if(!$this->smtp->mail($from)) {
                     return 'MAIL FROM not accepted';
                 }else {
                     $this->connected = true;
                 }
+            }else {
+                $status = $connection;
             }
-        } catch (ExceptionNoConnection $e) {
-            // unable to connect to host, so these addresses are invalid?
-            $status = 'unable to connect to host';
-        }
+
         return $status;
     }
 
