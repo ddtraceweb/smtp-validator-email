@@ -3,7 +3,6 @@
 namespace SmtpValidatorEmail\Helper;
 
 
-use SmtpValidatorEmail\Exception\ExceptionNoConnection;
 use SmtpValidatorEmail\Helper\Interfaces\TransportInterface;
 use SmtpValidatorEmail\Service\StatusManager;
 use SmtpValidatorEmail\Smtp\Smtp;

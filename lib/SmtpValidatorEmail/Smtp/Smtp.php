@@ -227,10 +227,9 @@ class Smtp
         if (!$this->state['helo']) {
             throw new Exception\ExceptionNoHelo('Need HELO before MAIL FROM');
         }
-        // issue MAIL FROM, 5 minute timeout
-        $this->send('MAIL FROM:<' . $from . '>');
         try {
-
+            // issue MAIL FROM, 5 minute timeout
+            $this->send('MAIL FROM:<' . $from . '>');
             $this->expect($this->config['responseCodes']['SMTP_GENERIC_SUCCESS'], $this->config['commandTimeouts']['mail']);
             // set state flags
             $this->state['mail'] = true;
@@ -352,25 +351,14 @@ class Smtp
     {
         // must be connected
         if (!$this->isConnect()) {
-            // TODO: Change to log to statusManager
-//            if($this->logPath){
-//                $this->writeLog('No connection');
-//            }
             throw new Exception\ExceptionNoConnection('No connection');
         }
-
         // write the cmd to the connection stream
         $result = fwrite($this->socket, $cmd . self::CRLF);
         // did the send work?
         if ($result === false) {
-            // TODO: Change to log to statusManager
-//            if($this->logPath){
-//                $this->writeLog('Send failed on: ' . $this->host);
-//            }
             throw new Exception\ExceptionSendFailed('Send failed on: '. $this->host );
         }
-        //TODO: Send cmd , put to log
-        // dump('Send: '.$cmd);
         return $result;
     }
 
