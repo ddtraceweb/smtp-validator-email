@@ -51,9 +51,7 @@ class ValidatorInitHelper{
         );
 
         $emails = is_array($emails) ? EmailHelper::sortEmailsByDomain($emails) : $emails;
-
         $this->options = array_merge($defaultOptions,$options);
-
         $this->setSender($sender);
         $this->setBags($emails);
         $this->results = new Results();
@@ -62,7 +60,7 @@ class ValidatorInitHelper{
     public function setBags($emails) {
         if (!empty($emails)) {
             $emailBag = new BagHelper();
-            $emailBag->add((array)$emails);
+            $emailBag->add($emails);
             $domainBag = $this->setEmailsDomains($emailBag);
             $this->domains = $domainBag->all();
         }

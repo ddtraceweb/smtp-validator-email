@@ -25,6 +25,7 @@ class ValidationHelper {
      * @var Mx
      */
     private $mxs;
+
     /**
      * @var Domain;
      */
@@ -37,14 +38,17 @@ class ValidationHelper {
 
     /**
      * @param StatusManager $statusManager
+     * @param $users array
      * @param array $options
      * @param array $from Domain and User
+     * @param $domain
      */
-    public function __construct(StatusManager $statusManager,$options,$from){
+    public function __construct(StatusManager $statusManager,$users,$options,$from,$domain){
+
         $this->statusManager = $statusManager;
         $this->options = $options;
-        $this->transport = new TransportHelper($this->statusManager, $from);
-
+        $this->users = $users;
+        $this->transport = new TransportHelper($this->statusManager, $users,$from,$domain);
     }
 
     /**
@@ -65,10 +69,9 @@ class ValidationHelper {
      * @param $domain
      * @param $users
      */
-    public function startValidation($domain,$users){
+    public function startValidation($domain){
         $mx = new Mx();
         $this->mxs = $mx->getEntries($domain);
-        $this->users = $users;
         $this->dom = new Domain($domain);
         $this->dom->addDescription(array('users' => $this->users));
         $this->dom->addDescription(array('mxs' =>  $this->mxs));
@@ -83,7 +86,7 @@ class ValidationHelper {
         try {
             $this->transport->connect($this->mxs);
         } catch (\Exception $e) {
-            $this->statusManager->setStatus($this->users, $this->dom, 0, 'could not connect to host '.$this->mxs);
+            $this->statusManager->setStatus($this->users, $this->dom, 0, 'could not connect to host ');
         }
     }
 
@@ -93,7 +96,8 @@ class ValidationHelper {
      * but doesn't confuse users.
      */
     public function catchAll() {
-        $this->getTransport()->getSmtp()->noop();
+
+        $isCatchallDomain = null;
         if($this->options['catchAllEnabled']){
             try{
                 $isCatchallDomain = $this->transport->getSmtp()->acceptsAnyRecipient($this->dom);
@@ -122,6 +126,7 @@ class ValidationHelper {
      */
     public function mailFrom($fromUser,$fromDomain) {
         if (!($this->transport->getSmtp()->mail($fromUser. '@' . $fromDomain))) {
+
             // MAIL FROM not accepted, we can't talk
             $this->statusManager->setStatus($this->users, $this->dom, $this->options['noCommIsValid'],'MAIL FROM not accepted');
         }
@@ -136,23 +141,31 @@ class ValidationHelper {
     public function rcptEachUser($fromUser,$fromDomain){
         $this->transport->getSmtp()->noop();
         // rcpt to for each user
+        var_dump("user list :");
+        var_dump($this->users);
+        $iterator = 0;
         foreach ($this->users as $user) {
-            // TODO: An error from the SMTP couse a disconnect , need to implement a reconnect
+            var_dump("Checking user :".$user);
+
             if(!$this->transport->getSmtp()->isConnect()){
+                var_dump("Connection lost. Reconnect.");
                 $this->transport->reconnect($fromUser . '@' . $fromDomain);
             }
+
             $address = $user . '@' . $this->dom->getDomain();
+
             // Sets the results to an integer 0 ( failure ) or 1 ( success )
+            $result = $this->transport->getSmtp()->rcpt($address);
+            var_dump("The adress $address, was checked , result: $result");
+            $this->statusManager->updateStatus($address,$result);
 
-            // TODO: Impliment setter
-            $this->statusManager->updateStatus($address,$this->transport->getSmtp()->rcpt($address));
-
-            if ($this->statusManager->getStatus($address) == 1) {
+            if ($iterator == count($this->users)) {
                 // stop the loop
-                return true;
+                return 1;
             }
 
             $this->transport->getSmtp()->noop();
+            $iterator++;
         }
     }
 
@@ -168,8 +181,5 @@ class ValidationHelper {
 
     public function getDomainInfo() {
         // TODO: Create setter for domainMoreInfo
-        //                if ($options['domainMoreInfo']) {
-        //                    $this->results->get[$dom->getDomain()] = $dom->getDescription();
-        //                }
     }
 }

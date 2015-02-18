@@ -76,15 +76,23 @@ class ValidatorEmail extends ValidatorInitHelper
             $i = 0;
             $loopStop = 0;
             while ($i < $count && $loopStop != 1) {
-                $validator = new ValidationHelper($this->statManager,$this->options,array("fromDomain" => $this->fromDomain, "fromUser" => $this->fromUser));
-                $validator->startValidation($domain,$users);
-                $transport = $validator->getTransport();
-                $smtp = $transport->getSmtp();
+                $validator = new ValidationHelper(
+                    $this->statManager,
+                    $users,
+                    $this->options,
+                    array("fromDomain" => $this->fromDomain, "fromUser" => $this->fromUser),
+                    $domain
+                );
 
+                $validator->startValidation($domain,$users);
                 $validator->establishConnection();
 
+                $transport = $validator->getTransport();
+                $smtp = $transport->getSmtp();
+                // are we connected?
                 if ($smtp->isConnect()) {
                     sleep($options['delaySleep'][$i]);
+
                     // say helo, and continue if we can talk
                     if ($smtp->helo()) {
 
@@ -97,14 +105,17 @@ class ValidatorEmail extends ValidatorInitHelper
                          * see mail() for more
                          */
                         if ( $smtp->isConnect()) {
+
+                            $transport->getSmtp()->noop();
+
                             if( $validator->catchAll() ){
                                 $loopStop = 1;
                                 continue;
                             }
 
                             // if we're still connected, try issuing rcpts
-                            if ($smtp->isConnect() && $validator->rcptEachUser($this->fromUser,$this->fromDomain)) {
-                                $loopStop = 1;
+                            if ($smtp->isConnect()) {
+                                $loopStop = $validator->rcptEachUser($this->fromUser,$this->fromDomain) || 0;
                             }
                             // saying buh-bye if we're still connected, cause we're done here
                             $validator->closeConnection();

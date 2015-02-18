@@ -24,6 +24,12 @@ class Smtp
      * @var
      */
     public $host;
+
+    /**
+     * @var
+     */
+    private $domain;
+    
     /**
      * @var
      */
@@ -66,15 +72,16 @@ class Smtp
      */
     private $statusManager;
 
-    public $options = array();
+    private $users ;
 
+    public $options = array();
     /**
      * @param StatusManager $statusManager
-     *
+     * @param $users array
      * @param array $options ("fromDomain" => value, "fromUser" => value);
      * must contains the variables from sender
      */
-    public function __construct(StatusManager $statusManager, array $options)
+    public function __construct(StatusManager $statusManager,$users, array $options)
     {
 
         $this->config = ConfigReader::readConfigs(__DIR__.'/../Configs/smtp.yml');
@@ -84,6 +91,7 @@ class Smtp
             $this->config['responseCodes']['SMTP_MAIL_ACTION_ABORTED'],
             $this->config['responseCodes']['SMTP_REQUESTED_ACTION_NOT_TAKEN'],
         );
+        $this->users = $users;
         $this->options = $options;
     }
 
@@ -97,9 +105,10 @@ class Smtp
      * @throws Exception\ExceptionNoConnection
      * @throws Exception\ExceptionNoTimeout
      */
-    public function connect($host)
+    public function connect($host,$domain)
     {
         $remoteSocket = $host . ':' . $this->config['port'];
+        $this->domain = $domain;
         $errnum       = 0;
         $errstr       = '';
         $this->host   = $remoteSocket;
@@ -187,7 +196,6 @@ class Smtp
             return true;
         } catch (Exception\ExceptionUnexpectedResponse $e) {
             // connected, but received an unexpected response, so disconnect
-
             $this->disconnect(false);
 
             return false;
@@ -199,7 +207,7 @@ class Smtp
      * Send EHLO or HELO, depending on what's supported by the remote host.
      * @return void
      */
-    // TODO: Log this
+
     protected function ehlo()
     {
         try {
@@ -256,12 +264,12 @@ class Smtp
      */
     public function rcpt($to)
     {
+
         // need to have issued MAIL FROM first
         if (!$this->state['mail']) {
+            $this->statusManager->setStatus($this->users,new Domain($this->domain),0,'Need MAIL FROM before RCPT TO');
             throw new Exception\ExceptionNoMailFrom('Need MAIL FROM before RCPT TO');
         }
-
-        $isValid       = 0;
         $expectedCodes = array(
             $this->config['responseCodes']['SMTP_GENERIC_SUCCESS'],
             $this->config['responseCodes']['SMTP_USER_NOT_LOCAL']
@@ -280,16 +288,12 @@ class Smtp
                 $this->state['rcpt'] = true;
                 $isValid             = 1;
             } catch (Exception\ExceptionUnexpectedResponse $e) {
-                // TODO: Change to log to statusManager
-//                if($this->logPath){
-//                    $this->writeLog('Unexpected response to RCPT TO: ' . $e->getMessage().' | server response :'.fgets($this->socket, 1024));
-//                }
+                $this->statusManager->setStatus($this->users,new Domain($this->domain),0,'Unexpected response to RCPT TO: ' . $e->getMessage().' | server response :'.fgets($this->socket, 1024));
+                $isValid = 0;
             }
         } catch (Exception\ExceptionSmtpValidatorEmail $e) {
-            // TODO: Change to log to statusManager
-//            if($this->logPath){
-//                $this->writeLog('Sending RCPT TO failed: ' . $e->getMessage());
-//            }
+            $this->statusManager->setStatus($this->users,new Domain($this->domain),0,'Sending RCPT TO failed: ' . $e->getMessage());
+            $isValid = 0;
         }
 
         return $isValid;
@@ -351,14 +355,22 @@ class Smtp
     {
         // must be connected
         if (!$this->isConnect()) {
-            throw new Exception\ExceptionNoConnection('No connection');
+            $this->statusManager->setStatus($this->users,new Domain($this->domain),0,'No connection');
+            return false;
         }
+
+        $result = false;
         // write the cmd to the connection stream
-        $result = fwrite($this->socket, $cmd . self::CRLF);
-        // did the send work?
-        if ($result === false) {
-            throw new Exception\ExceptionSendFailed('Send failed on: '. $this->host );
+        try {
+            $result = fwrite($this->socket, $cmd . self::CRLF);
+        }catch (\Exception $e){
+            // did the send work?
+            if ($result === false) {
+                $this->statusManager->setStatus($this->users,new Domain($this->domain),0,'Send failed on: '. $this->host );
+                return $result;
+            }
         }
+
         return $result;
     }
 
@@ -384,22 +396,15 @@ class Smtp
         // have we timed out?
         $info = stream_get_meta_data($this->socket);
         if (!empty($info['timed_out'])) {
-            // TODO: Change to log to statusManager
-//            if($this->logPath){
-//                $this->writeLog('Timed out in recv , response: '.$line);
-//            }
-            throw new Exception\ExceptionTimeout('Timed out in recv');
+            $this->statusManager->setStatus($this->users,new Domain($this->domain),0,'Timed out in recv' );
+            //throw new Exception\ExceptionTimeout('Timed out in recv');
         }
         // did we actually receive anything?
         if ($line === false) {
-            // TODO: Change to log to statusManager
-//            if($this->logPath){
-//                $this->writeLog('No response in recv: '.$line);
-//            }
-            throw new Exception\ExceptionNoResponse('No response in recv');
+            $this->statusManager->setStatus($this->users,new Domain($this->domain),0,'No response in recv' );
+            //throw new Exception\ExceptionNoResponse('No response in recv');
         }
-        // TODO: Debuging , this is the response from server, put to log
-        //dump('response: '.$line );
+
         return $line;
     }
 
@@ -428,7 +433,8 @@ class Smtp
             }
             sscanf($line, '%d%s', $code, $text);
             if ($code === null || !in_array($code, $codes)) {
-                throw new Exception\ExceptionUnexpectedResponse($line);
+                $this->statusManager->setStatus($this->users,new Domain($this->domain),0,'UnexpectedResponse: '.$line );
+                //throw new Exception\ExceptionUnexpectedResponse($line);
             }
 
         } catch (Exception\ExceptionNoResponse $e) {
