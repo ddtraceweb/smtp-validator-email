@@ -144,6 +144,12 @@ class ValidationHelper {
         var_dump("user list :");
         var_dump($this->users);
         $iterator = 0;
+        $dynamicTimeout = 0;
+
+        if(count($this->users) >= $this->options['sameDomainLimit']){
+            $dynamicTimeout = count($this->users);
+        }
+
         foreach ($this->users as $user) {
             var_dump("Checking user :".$user);
 
@@ -165,7 +171,14 @@ class ValidationHelper {
             }
 
             $this->transport->getSmtp()->noop();
-            $iterator++;
+
+            if( $iterator >= $dynamicTimeout/4 ){
+                $this->transport->disconnect();
+                sleep($dynamicTimeout);
+                $iterator = 0;
+            }else {
+                $iterator++;
+            }
         }
     }
 

@@ -38,6 +38,7 @@ class ValidatorEmail extends ValidatorInitHelper
      *      'delaySleep' is an array of delay(s) possible after connected Server to send the request SMTP.
      *      'catchAllIsValid' (int) can be 0 for false or 1 for true . Are 'catch-all' accounts considered valid or not?
      *      'catchAllEnabled' (int) 0 off 1 on enables catchAll test , may take more time
+     *      'sameDomainLimit' (int) how many users are allowed a same domain , if limit reached , dynamic timeout will enabled
      *      'noCommIsValid' Being unable to communicate with the remote MTA could mean an address
      *                      is invalid, but it might not, depending on your use case, set the
      *                      value appropriately.
