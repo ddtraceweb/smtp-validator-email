@@ -155,7 +155,7 @@ class ValidationHelper {
 
             if(!$this->transport->getSmtp()->isConnect()){
                 var_dump("Connection lost. Reconnect.");
-                $this->transport->reconnect($fromUser . '@' . $fromDomain);
+                $this->establishConnection();
             }
 
             $address = $user . '@' . $this->dom->getDomain();
