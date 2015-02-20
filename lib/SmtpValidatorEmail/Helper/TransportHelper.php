@@ -39,6 +39,7 @@ class TransportHelper implements TransportInterface{
                 $this->setHost($host);
                 $status = 1;
                 $this->connected = true;
+                $this->smtp->state['mail'] = true;
                 break;
             }else{
                 $status = $connection;

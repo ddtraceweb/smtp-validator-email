@@ -44,7 +44,7 @@ class Smtp
      */
     public $greyListedConsideredValid = true;
 
-    private $state = array(
+    public $state = array(
         'helo' => false,
         'mail' => false,
         'rcpt' => false
