@@ -172,12 +172,12 @@ class ValidationHelper {
 
             $this->transport->getSmtp()->noop();
 
-            if( $iterator % 4 == 0 ){
-                $this->transport->disconnect();
-                sleep($dynamicTimeout);
-            }else {
-                $iterator++;
-            }
+//            if( $iterator > 0 && $iterator % 4 == 0 ){
+//                $this->transport->disconnect();
+//                sleep($dynamicTimeout);
+//            }
+
+            $iterator++;
         }
     }
 
