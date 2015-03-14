@@ -3,7 +3,6 @@
 namespace SmtpValidatorEmail\Helper;
 
 
-use SmtpValidatorEmail\Exception\ExceptionNoConnection;
 use SmtpValidatorEmail\Helper\Interfaces\TransportInterface;
 use SmtpValidatorEmail\Service\StatusManager;
 use SmtpValidatorEmail\Smtp\Smtp;
@@ -15,33 +14,35 @@ class TransportHelper implements TransportInterface{
 
     private $connected = false;
 
+    private $domain;
+
     /**
      * @param StatusManager $statusManager
+     * @param $users array
      * @param array $options FromDomain and FromUsers keys
+     * @param $domain
      */
-    public function __construct (StatusManager $statusManager,$options) {
-        $this->smtp = new Smtp($statusManager,$options);
+    public function __construct (StatusManager $statusManager,$users,$options,$domain) {
+        $this->smtp = new Smtp($statusManager,$users,$options);
+        $this->domain = $domain;
     }
 
+    /**
+     * @param $mxs
+     * @return int|null|String
+     */
     public function connect ($mxs) {
-
         $status = null;
-
         foreach($mxs as $host=>$priority){
-            // try connecting to the remote host
-            try {
-
-                $this->smtp->connect($host);
-
-                if ( $this->smtp->isConnect() ) {
-                    $this->setHost($host);
-                    $this->connected = true;
-                    break;
-                }
-
-            } catch (ExceptionNoConnection $e) {
-                // unable to connect to host, so these addresses are invalid?
-                $status = 'unable to connect to host';
+            $connection = $this->smtp->connect($host,$this->domain);
+            if ( $connection == 'connected' ) {
+                $this->setHost($host);
+                $status = 1;
+                $this->connected = true;
+                $this->smtp->state['mail'] = true;
+                break;
+            }else{
+                $status = $connection;
             }
         }
         return $status;
@@ -49,21 +50,17 @@ class TransportHelper implements TransportInterface{
 
     public function reconnect($from) {
         $status = null;
-        try {
-            $this->smtp->connect($this->host);
-
-            if($this->smtp->isConnect()){
-                $this->smtp->helo();
-                if(!$this->smtp->mail($from)) {
-                    return 'MAIL FROM not accepted';
-                }else {
-                    $this->connected = true;
-                }
+        if($connection = $this->smtp->connect($this->host,$this->domain)=='connected'){
+            $this->smtp->helo();
+            if(!$this->smtp->mail($from)) {
+                return 'MAIL FROM not accepted';
+            }else {
+                $this->connected = true;
             }
-        } catch (ExceptionNoConnection $e) {
-            // unable to connect to host, so these addresses are invalid?
-            $status = 'unable to connect to host';
+        }else {
+            $status = $connection;
         }
+
         return $status;
     }
 
