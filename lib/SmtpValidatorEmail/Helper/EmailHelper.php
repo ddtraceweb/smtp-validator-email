@@ -16,6 +16,7 @@ class EmailHelper {
             }
             return ($domainA < $domainB) ? -1 : 1;
         });
+
         return $emails;
     }
 
@@ -26,6 +27,7 @@ class EmailHelper {
         for($i = 0 ; $i<count($emails); $i++) {
             $groupedEmails[substr(strrchr($emails[$i], "@"), 1)][]= $emails[$i];
         }
+
         return $groupedEmails;
     }
 }
