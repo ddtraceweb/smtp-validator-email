@@ -75,13 +75,14 @@ class Smtp
     private $users ;
 
     public $options = array();
+    public $validationOptions = array();
     /**
      * @param StatusManager $statusManager
      * @param $users array
      * @param array $options ("fromDomain" => value, "fromUser" => value);
      * must contains the variables from sender
      */
-    public function __construct(StatusManager $statusManager,$users, array $options)
+    public function __construct(StatusManager $statusManager, $users, array $options, array $validationOptions)
     {
 
         $this->config = ConfigReader::readConfigs(__DIR__.'/../Configs/smtp.yml');
@@ -93,6 +94,7 @@ class Smtp
         );
         $this->users = $users;
         $this->options = $options;
+        $this->validationOptions = $validationOptions;
     }
 
 
@@ -120,7 +122,7 @@ class Smtp
             $errstr,
             $this->timeout,
             STREAM_CLIENT_CONNECT,
-            stream_context_create(array())
+            stream_context_create($this->validationOptions['context'])
         );
 
         // connected?

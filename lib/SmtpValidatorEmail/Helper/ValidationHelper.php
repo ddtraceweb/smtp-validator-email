@@ -48,7 +48,7 @@ class ValidationHelper {
         $this->statusManager = $statusManager;
         $this->options = $options;
         $this->users = $users;
-        $this->transport = new TransportHelper($this->statusManager, $users,$from,$domain);
+        $this->transport = new TransportHelper($this->statusManager, $users, $from, $domain, $options);
     }
 
     /**
