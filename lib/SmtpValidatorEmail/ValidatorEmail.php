@@ -26,6 +26,11 @@ class ValidatorEmail extends ValidatorInitHelper
     private $statManager;
 
     /**
+     * @var array
+     */
+    private $debug = array();
+
+    /**
      * Constructs the validator
      *
      * @param array|string $emails
@@ -62,13 +67,22 @@ class ValidatorEmail extends ValidatorInitHelper
     }
 
     /**
+     * Returns logs from the SMTP transport
+     * @return array
+     */
+    public function getDebug()
+    {
+        return $this->debug;
+    }
+
+    /**
      * @param $options array
      * @throws Exception\ExceptionNoHelo
      * @throws Exception\ExceptionNoMailFrom
      * @throws Exception\ExceptionNoTimeout
      */
-    private function runValidation($options){
-
+    private function runValidation($options)
+    {
         // The foreach fires for each email in array
         foreach ($this->domains as $domain => $users) {
 
@@ -107,7 +121,7 @@ class ValidatorEmail extends ValidatorInitHelper
                          */
                         if ( $smtp->isConnect()) {
 
-                            $transport->getSmtp()->noop();
+                            $smtp->noop();
 
                             if( $validator->catchAll() ){
                                 $loopStop = 1;
@@ -132,6 +146,10 @@ class ValidatorEmail extends ValidatorInitHelper
                 //TODO: Finish method;
                 $validator->getDomainInfo();
                 $i++;
+
+                if ($this->options['debug'] === true) {
+                    $this->debug = array_merge($this->debug, $smtp->getDebug());
+                }
             }
         }
     }

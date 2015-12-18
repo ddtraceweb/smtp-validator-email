@@ -50,6 +50,10 @@ class Smtp
         'rcpt' => false
     );
 
+    /**
+     * @var array
+     */
+    private $debug = array();
 
     /**
      * @var mixed configs loaded from yml
@@ -145,6 +149,15 @@ class Smtp
     public function isConnect()
     {
         return is_resource($this->socket);
+    }
+
+    /**
+     * Returns smtp logs
+     * @return array
+     */
+    public function getDebug()
+    {
+        return $this->debug;
     }
 
     /**
@@ -363,6 +376,9 @@ class Smtp
         $result = false;
         // write the cmd to the connection stream
         try {
+            if ($this->validationOptions['debug'] === true) {
+                $this->debug[] = "send> {$cmd}";
+            }
             $result = fwrite($this->socket, $cmd . self::CRLF);
         }catch (\Exception $e){
             // did the send work?
@@ -393,6 +409,10 @@ class Smtp
         }
         // retrieve response
         $line = fgets($this->socket, 1024);
+
+        if ($this->validationOptions['debug'] === true) {
+            $this->debug[] = "received> {$line}";
+        }
 
         // have we timed out?
         $info = stream_get_meta_data($this->socket);

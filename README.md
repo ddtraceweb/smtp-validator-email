@@ -110,7 +110,7 @@ var_dump($validator->getResults());
 ?>
 ```
 
-* example with 1 email with using a specific interface:
+* example with 1 email with using a specific interface with debug mode ON:
 
 
 ```php
@@ -121,9 +121,10 @@ use SmtpValidatorEmail\ValidatorEmail;
 $from = 'xyz@xzzz.com'; // for SMTP FROM:<> command
 $emails = 'toto@somewhererlse.com';
 
-$validator = new ValidatorEmail($email, $from, array('context' => 'socket' => array('bindto' => '0.0.0.0')));
+$validator = new ValidatorEmail($email, $from, array('debug' => true, 'context' => 'socket' => array('bindto' => '0.0.0.0')));
 
 var_dump($validator->getResults());
+var_dump($validator->getDebug());
 ?>
 ```
 
@@ -137,6 +138,7 @@ array(
   'catchAllIsValid' => 0,
   'catchAllEnabled' => 1,
   'context' => array(),
+  'debug' => false
 );
 ```
 
