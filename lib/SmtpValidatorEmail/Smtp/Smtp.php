@@ -290,7 +290,6 @@ class Smtp
                 $this->state['rcpt'] = true;
                 $isValid             = 1;
             } catch (Exception\ExceptionUnexpectedResponse $e) {
-                $this->statusManager->setStatus($this->users,new Domain($this->domain),0,'Unexpected response to RCPT TO: ' . $e->getMessage().' | server response :'.fgets($this->socket, 1024));
                 $isValid = 0;
             }
         } catch (Exception\ExceptionSmtpValidatorEmail $e) {
@@ -436,7 +435,7 @@ class Smtp
             sscanf($line, '%d%s', $code, $text);
             if ($code === null || !in_array($code, $codes)) {
                 $this->statusManager->setStatus($this->users,new Domain($this->domain),0,'UnexpectedResponse: '.$line );
-                //throw new Exception\ExceptionUnexpectedResponse($line);
+                throw new Exception\ExceptionUnexpectedResponse($line);
             }
 
         } catch (Exception\ExceptionNoResponse $e) {
