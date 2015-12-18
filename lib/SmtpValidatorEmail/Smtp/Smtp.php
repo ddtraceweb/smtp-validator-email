@@ -299,9 +299,14 @@ class Smtp
             $this->send('RCPT TO:<' . $to . '>');
             // process the response
             try {
-                $this->expect($expectedCodes, $this->config['commandTimeouts']['rcpt']);
+                $response = $this->expect($expectedCodes, $this->config['commandTimeouts']['rcpt']);
                 $this->state['rcpt'] = true;
                 $isValid             = 1;
+
+                $this->statusManager->updateStatus($to, array(
+                    'result' => $isValid,
+                    'info' => "OK: {$response}"
+                ));
             } catch (Exception\ExceptionUnexpectedResponse $e) {
                 $isValid = 0;
             }
@@ -467,7 +472,7 @@ class Smtp
 
         }
 
-        return $text;
+        return $line;
     }
 
     /**

@@ -49,6 +49,7 @@ class ValidatorInitHelper{
             'catchAllEnabled' => 1,
             'sameDomainLimit' => 5,
             'context' => array(),
+            'detailResults' => false,
             'debug' => false
         );
 
