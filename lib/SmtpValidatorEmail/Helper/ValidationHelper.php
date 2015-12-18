@@ -161,9 +161,7 @@ class ValidationHelper {
             $address = $user . '@' . $this->dom->getDomain();
 
             // Sets the results to an integer 0 ( failure ) or 1 ( success )
-            $result = $this->transport->getSmtp()->rcpt($address);
-            // var_dump("The adress $address, was checked , result: $result");
-            $this->statusManager->updateStatus($address,$result);
+            $this->transport->getSmtp()->rcpt($address);
 
             if ($iterator == count($this->users)) {
                 // stop the loop
