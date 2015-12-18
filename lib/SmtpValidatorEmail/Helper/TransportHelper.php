@@ -22,8 +22,8 @@ class TransportHelper implements TransportInterface{
      * @param array $options FromDomain and FromUsers keys
      * @param $domain
      */
-    public function __construct (StatusManager $statusManager,$users,$options,$domain) {
-        $this->smtp = new Smtp($statusManager,$users,$options);
+    public function __construct (StatusManager $statusManager, $users, $options, $domain, $validationOptions) {
+        $this->smtp = new Smtp($statusManager, $users, $options, $validationOptions);
         $this->domain = $domain;
     }
 

@@ -110,7 +110,24 @@ var_dump($validator->getResults());
 ?>
 ```
 
-* Avaialable default options
+* example with 1 email with using a specific interface:
+
+
+```php
+<?php
+
+use SmtpValidatorEmail\ValidatorEmail;
+
+$from = 'xyz@xzzz.com'; // for SMTP FROM:<> command
+$emails = 'toto@somewhererlse.com';
+
+$validator = new ValidatorEmail($email, $from, array('context' => 'socket' => array('bindto' => '0.0.0.0')));
+
+var_dump($validator->getResults());
+?>
+```
+
+* Available default options
 
 ```php
 array(
@@ -119,6 +136,7 @@ array(
   'noCommIsValid' => 0,
   'catchAllIsValid' => 0,
   'catchAllEnabled' => 1,
+  'context' => array(),
 );
 ```
 
