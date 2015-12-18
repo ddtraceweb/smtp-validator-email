@@ -138,6 +138,7 @@ array(
   'catchAllIsValid' => 0,
   'catchAllEnabled' => 1,
   'context' => array(),
+  'detailResults' => false, // Instead of returning 0 for invalid and 1 for valid, it will return an array. array('result' => $isValid /* 0 or 1 */, 'info' => "<SMTP response like: 250 2.1.5 Ok>")
   'debug' => false
 );
 ```
