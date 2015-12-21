@@ -384,8 +384,9 @@ class Smtp
             if ($this->validationOptions['debug'] === true) {
                 $this->debug[] = "send> {$cmd}";
             }
+
             $result = fwrite($this->socket, $cmd . self::CRLF);
-        }catch (\Exception $e){
+        } catch (\Exception $e) {
             // did the send work?
             if ($result === false) {
                 $this->statusManager->setStatus($this->users,new Domain($this->domain),0,'Send failed on: '. $this->host );
@@ -457,9 +458,10 @@ class Smtp
                 $line = $this->recv($timeout);
                 $text .= $line;
             }
+
             sscanf($line, '%d%s', $code, $text);
             if ($code === null || !in_array($code, $codes)) {
-                $this->statusManager->setStatus($this->users,new Domain($this->domain),0,'UnexpectedResponse: '.$line );
+                $this->statusManager->setStatus($this->users, new Domain($this->domain), 0, 'UnexpectedResponse: '. $line);
                 throw new Exception\ExceptionUnexpectedResponse($line);
             }
 
