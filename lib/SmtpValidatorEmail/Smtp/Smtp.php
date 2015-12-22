@@ -425,13 +425,11 @@ class Smtp
         // have we timed out?
         $info = stream_get_meta_data($this->socket);
         if (!empty($info['timed_out'])) {
-            $this->statusManager->setStatus($this->users,new Domain($this->domain),0,'Timed out in recv' );
-            //throw new Exception\ExceptionTimeout('Timed out in recv');
+            throw new Exception\ExceptionTimeout('Timed out in recv');
         }
         // did we actually receive anything?
         if ($line === false) {
-            $this->statusManager->setStatus($this->users,new Domain($this->domain),0,'No response in recv' );
-            //throw new Exception\ExceptionNoResponse('No response in recv');
+            throw new Exception\ExceptionNoResponse('No response in recv');
         }
 
         return $line;
@@ -452,7 +450,7 @@ class Smtp
             $codes = (array)$codes;
         }
         $code = null;
-        $text = '';
+        $text = $line = '';
         try {
 
             $text = $line = $this->recv($timeout);
@@ -473,6 +471,8 @@ class Smtp
             // lets clean up on our end as well?
             $this->disconnect(false);
 
+        } catch (Exception\ExceptionTimeout $e) {
+            $this->disconnect(false);
         }
 
         return $line;
