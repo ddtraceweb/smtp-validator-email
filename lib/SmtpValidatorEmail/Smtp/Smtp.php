@@ -308,10 +308,11 @@ class Smtp
                     'info' => "OK: {$response}"
                 ));
             } catch (Exception\ExceptionUnexpectedResponse $e) {
+                $this->statusManager->setStatus($this->users, new Domain($this->domain), 0, 'UnexpectedResponse: ' . $e->getMessage());
                 $isValid = 0;
             }
         } catch (Exception\ExceptionSmtpValidatorEmail $e) {
-            $this->statusManager->setStatus($this->users,new Domain($this->domain),0,'Sending RCPT TO failed: ' . $e->getMessage());
+            $this->statusManager->setStatus($this->users, new Domain($this->domain), 0, 'Sending RCPT TO failed: ' . $e->getMessage());
             $isValid = 0;
         }
 
@@ -345,9 +346,10 @@ class Smtp
     {
         // although RFC says QUIT can be issued at any time, we won't
         if ($this->state['helo']) {
-            // [TODO] might need a try/catch here to cover some edge cases...
-            $this->send('QUIT');
-            $this->expect($this->config['responseCodes']['SMTP_QUIT_SUCCESS'], $this->config['commandTimeouts']['quit']);
+            try {
+                $this->send('QUIT');
+                $this->expect($this->config['responseCodes']['SMTP_QUIT_SUCCESS'], $this->config['commandTimeouts']['quit']);
+            } catch (Exception\ExceptionUnexpectedResponse $e) {}
         }
     }
 
@@ -461,7 +463,6 @@ class Smtp
 
             sscanf($line, '%d%s', $code, $text);
             if ($code === null || !in_array($code, $codes)) {
-                $this->statusManager->setStatus($this->users, new Domain($this->domain), 0, 'UnexpectedResponse: '. $line);
                 throw new Exception\ExceptionUnexpectedResponse($line);
             }
 
