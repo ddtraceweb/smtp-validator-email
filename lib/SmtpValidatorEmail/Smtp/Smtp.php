@@ -384,7 +384,7 @@ class Smtp
         // write the cmd to the connection stream
         try {
             if ($this->validationOptions['debug'] === true) {
-                $this->debug[] = "send> {$cmd}";
+                $this->debug[] = ["timestamp" => microtime(true), "message" => "send> {$cmd}"];
             }
 
             $result = fwrite($this->socket, $cmd . self::CRLF);
@@ -419,7 +419,7 @@ class Smtp
         $line = fgets($this->socket, 1024);
 
         if ($this->validationOptions['debug'] === true) {
-            $this->debug[] = "received> {$line}";
+            $this->debug[] = ["timestamp" => microtime(true), "message" => "received> {$line}"];
         }
 
         // have we timed out?
