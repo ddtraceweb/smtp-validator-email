@@ -24,7 +24,7 @@
     }
   ],
   "require": {
-    "php": ">=5.3.3",
+    "php": ">=5.4",
     "symfony/config": "~2.6,>=2.6.3",
     "symfony/yaml": "~2"
   },
