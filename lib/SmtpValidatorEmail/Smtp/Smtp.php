@@ -50,6 +50,10 @@ class Smtp
         'rcpt' => false
     );
 
+    /**
+     * @var array
+     */
+    private $debug = array();
 
     /**
      * @var mixed configs loaded from yml
@@ -145,6 +149,15 @@ class Smtp
     public function isConnect()
     {
         return is_resource($this->socket);
+    }
+
+    /**
+     * Returns smtp logs
+     * @return array
+     */
+    public function getDebug()
+    {
+        return $this->debug;
     }
 
     /**
@@ -286,15 +299,20 @@ class Smtp
             $this->send('RCPT TO:<' . $to . '>');
             // process the response
             try {
-                $this->expect($expectedCodes, $this->config['commandTimeouts']['rcpt']);
+                $response = $this->expect($expectedCodes, $this->config['commandTimeouts']['rcpt']);
                 $this->state['rcpt'] = true;
                 $isValid             = 1;
+
+                $this->statusManager->updateStatus($to, array(
+                    'result' => $isValid,
+                    'info' => "OK: {$response}"
+                ));
             } catch (Exception\ExceptionUnexpectedResponse $e) {
-                $this->statusManager->setStatus($this->users,new Domain($this->domain),0,'Unexpected response to RCPT TO: ' . $e->getMessage().' | server response :'.fgets($this->socket, 1024));
+                $this->statusManager->setStatus($this->users, new Domain($this->domain), 0, 'UnexpectedResponse: ' . $e->getMessage());
                 $isValid = 0;
             }
         } catch (Exception\ExceptionSmtpValidatorEmail $e) {
-            $this->statusManager->setStatus($this->users,new Domain($this->domain),0,'Sending RCPT TO failed: ' . $e->getMessage());
+            $this->statusManager->setStatus($this->users, new Domain($this->domain), 0, 'Sending RCPT TO failed: ' . $e->getMessage());
             $isValid = 0;
         }
 
@@ -328,9 +346,10 @@ class Smtp
     {
         // although RFC says QUIT can be issued at any time, we won't
         if ($this->state['helo']) {
-            // [TODO] might need a try/catch here to cover some edge cases...
-            $this->send('QUIT');
-            $this->expect($this->config['responseCodes']['SMTP_QUIT_SUCCESS'], $this->config['commandTimeouts']['quit']);
+            try {
+                $this->send('QUIT');
+                $this->expect($this->config['responseCodes']['SMTP_QUIT_SUCCESS'], $this->config['commandTimeouts']['quit']);
+            } catch (Exception\ExceptionUnexpectedResponse $e) {}
         }
     }
 
@@ -364,8 +383,12 @@ class Smtp
         $result = false;
         // write the cmd to the connection stream
         try {
+            if ($this->validationOptions['debug'] === true) {
+                $this->debug[] = ["timestamp" => microtime(true), "message" => "send> {$cmd}"];
+            }
+
             $result = fwrite($this->socket, $cmd . self::CRLF);
-        }catch (\Exception $e){
+        } catch (\Exception $e) {
             // did the send work?
             if ($result === false) {
                 $this->statusManager->setStatus($this->users,new Domain($this->domain),0,'Send failed on: '. $this->host );
@@ -395,16 +418,18 @@ class Smtp
         // retrieve response
         $line = fgets($this->socket, 1024);
 
+        if ($this->validationOptions['debug'] === true) {
+            $this->debug[] = ["timestamp" => microtime(true), "message" => "received> {$line}"];
+        }
+
         // have we timed out?
         $info = stream_get_meta_data($this->socket);
         if (!empty($info['timed_out'])) {
-            $this->statusManager->setStatus($this->users,new Domain($this->domain),0,'Timed out in recv' );
-            //throw new Exception\ExceptionTimeout('Timed out in recv');
+            throw new Exception\ExceptionTimeout('Timed out in recv');
         }
         // did we actually receive anything?
         if ($line === false) {
-            $this->statusManager->setStatus($this->users,new Domain($this->domain),0,'No response in recv' );
-            //throw new Exception\ExceptionNoResponse('No response in recv');
+            throw new Exception\ExceptionNoResponse('No response in recv');
         }
 
         return $line;
@@ -425,7 +450,7 @@ class Smtp
             $codes = (array)$codes;
         }
         $code = null;
-        $text = '';
+        $text = $line = '';
         try {
 
             $text = $line = $this->recv($timeout);
@@ -433,10 +458,10 @@ class Smtp
                 $line = $this->recv($timeout);
                 $text .= $line;
             }
+
             sscanf($line, '%d%s', $code, $text);
             if ($code === null || !in_array($code, $codes)) {
-                $this->statusManager->setStatus($this->users,new Domain($this->domain),0,'UnexpectedResponse: '.$line );
-                //throw new Exception\ExceptionUnexpectedResponse($line);
+                throw new Exception\ExceptionUnexpectedResponse($line);
             }
 
         } catch (Exception\ExceptionNoResponse $e) {
@@ -446,9 +471,11 @@ class Smtp
             // lets clean up on our end as well?
             $this->disconnect(false);
 
+        } catch (Exception\ExceptionTimeout $e) {
+            $this->disconnect(false);
         }
 
-        return $text;
+        return $line;
     }
 
     /**

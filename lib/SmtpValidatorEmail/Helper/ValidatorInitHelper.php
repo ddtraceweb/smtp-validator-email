@@ -43,12 +43,14 @@ class ValidatorInitHelper{
     public function init($emails = array(), $sender, $options = array()) {
         $defaultOptions = array(
             'domainMoreInfo' => false,
-            'delaySleep' => array(0,1),
+            'delaySleep' => array(0),
             'noCommIsValid' => 0,
             'catchAllIsValid' => 0,
             'catchAllEnabled' => 1,
             'sameDomainLimit' => 5,
-            'context' => array()
+            'context' => array(),
+            'detailResults' => false,
+            'debug' => false
         );
 
         $emails = is_array($emails) ? EmailHelper::sortEmailsByDomain($emails) : $emails;

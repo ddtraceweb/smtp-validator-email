@@ -140,9 +140,7 @@ class ValidationHelper {
      */
     public function rcptEachUser($fromUser,$fromDomain){
         $this->transport->getSmtp()->noop();
-        // rcpt to for each user
-        // var_dump("user list :");
-        // var_dump($this->users);
+
         $iterator = 0;
         $dynamicTimeout = 0;
 
@@ -151,10 +149,7 @@ class ValidationHelper {
         }
 
         foreach ($this->users as $user) {
-            // var_dump("Checking user :".$user);
-
             if(!$this->transport->getSmtp()->isConnect()){
-                // var_dump("Connection lost. Reconnect.");
                 $this->establishConnection();
             }
 
@@ -162,8 +157,9 @@ class ValidationHelper {
 
             // Sets the results to an integer 0 ( failure ) or 1 ( success )
             $result = $this->transport->getSmtp()->rcpt($address);
-            // var_dump("The adress $address, was checked , result: $result");
-            $this->statusManager->updateStatus($address,$result);
+            if ($this->options['detailResults'] === false) {
+                $this->statusManager->updateStatus($address,$result);
+            }
 
             if ($iterator == count($this->users)) {
                 // stop the loop
