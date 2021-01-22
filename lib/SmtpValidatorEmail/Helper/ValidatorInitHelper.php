@@ -36,11 +36,11 @@ class ValidatorInitHelper{
     protected $options = array();
 
     /**
-     * @param array|String $emails
+     * @param array|string $emails
      * @param $sender
      * @param array $options
      */
-    public function init($emails = array(), $sender, $options = array()) {
+    public function init($emails, $sender, $options = array()) {
         $defaultOptions = array(
             'domainMoreInfo' => false,
             'delaySleep' => array(0),
