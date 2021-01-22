@@ -48,7 +48,7 @@ class ValidatorEmail extends ValidatorInitHelper
      *                      is invalid, but it might not, depending on your use case, set the
      *                      value appropriately.
      */
-    public function __construct($emails = array(), $sender, $options = array())
+    public function __construct($emails, $sender, $options = array())
     {
         $this->statManager = new StatusManager();
         $this->init($emails,$sender,$options);
