@@ -1,6 +1,6 @@
 #Smtp Validator Emails
-[![Build Status](https://travis-ci.org/rubenCodeforges/smtp-validator-email.svg)](https://travis-ci.org/rubenCodeforges/smtp-validator-email)
-[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/rubenCodeforges/smtp-validator-email/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/rubenCodeforges/smtp-validator-email/?branch=master)
+[![Build Status](https://travis-ci.org/ddtraceweb/smtp-validator-email.svg)](https://travis-ci.org/ddtraceweb/smtp-validator-email)
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/ddtraceweb/smtp-validator-email/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/ddtraceweb/smtp-validator-email/?branch=master)
 * Smtp Validator mail can validate your email to send smtp mail and check your mx.
 
 #Requirements
