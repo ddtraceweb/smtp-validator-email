@@ -1,5 +1,5 @@
 #Smtp Validator Emails
-[![Build Status](https://travis-ci.org/ddtraceweb/smtp-validator-email.svg)](https://travis-ci.org/ddtraceweb/smtp-validator-email)
+[![Build Status](https://travis-ci.com/ddtraceweb/smtp-validator-email.svg)](https://travis-ci.com/ddtraceweb/smtp-validator-email)
 * Smtp Validator mail can validate your email to send smtp mail and check your mx.
 
 #Requirements
@@ -142,6 +142,3 @@ array(
   'debug' => false
 );
 ```
-
-[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/ddtraceweb/smtp-validator-email/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
-
